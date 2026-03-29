@@ -12,6 +12,27 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication">
         <activity
+            android:name=".UserMainActivity"
+            android:exported="false" />
+        <activity
+            android:name=".CaregiverMainActivity"
+            android:exported="false" />
+        <activity
+            android:name=".CaregiverWaitLinkActivity"
+            android:exported="false" />
+        <activity
+            android:name=".UserLinkActivity"
+            android:exported="false" />
+        <activity
+            android:name=".CaregiverLinkActivity"
+            android:exported="false" />
+        <activity
+            android:name=".link"
+            android:exported="false" />
+        <activity
+            android:name=".FirstActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
