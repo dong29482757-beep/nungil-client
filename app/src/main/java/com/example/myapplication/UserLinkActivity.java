@@ -38,7 +38,7 @@ public class UserLinkActivity extends AppCompatActivity {
                 Toast.makeText(UserLinkActivity.this, user.getName() + "님과 연동되었습니다.", Toast.LENGTH_SHORT).show();
 
                 // ⭐ [수락] 클릭 시 바로 다음 화면(UserMainActivity)으로 이동
-                Intent intent = new Intent(UserLinkActivity.this, UserMainActivity.class);
+                Intent intent = new Intent(UserLinkActivity.this, UserChatActivity.class);
                 // 연동된 보호자 이름을 다음 화면에 전달하고 싶다면 아래 줄 추가
                 intent.putExtra("partnerName", user.getName());
                 startActivity(intent);
