@@ -23,14 +23,28 @@
         android:theme="@style/Theme.MyApplication"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".UserChatActivity"
+            android:name=".guardian.userchat.ui.UserChatActivity"
+            android:exported="true"/>
+
+        <!-- 보호자 온보딩 -->
+        <activity
+            android:name=".guardian.onboarding.SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".guardian.onboarding.WelcomeActivity"
+            android:windowSoftInputMode="stateHidden|adjustPan"/>
+        <activity
+            android:name=".guardian.onboarding.GuardianChatActivity"
+            android:windowSoftInputMode="adjustResize"/>
+        <activity android:name=".guardian.onboarding.SpecialNotesActivity"/>
+        <activity android:name=".guardian.onboarding.SetupCompleteActivity"/>
+        <activity android:name=".guardian.main.GuardianMainActivity"/>
+        <activity android:name=".guardian.schedule.ui.ScheduleAddActivity"/>
     </application>
 
 </manifest>

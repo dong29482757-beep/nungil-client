@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:fitsSystemWindows="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="일정 추가"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#333333"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- 무엇을 (과업 선택) -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="무엇을 할까요?"
+            android:textSize="14sp"
+            android:textColor="#555555"
+            android:layout_marginBottom="8dp"/>
+
+        <Spinner
+            android:id="@+id/spinnerTask"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_suggestion_chip"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- 언제 (날짜) -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="언제 할까요?"
+            android:textSize="14sp"
+            android:textColor="#555555"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/tvDate"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="날짜 선택"
+            android:textSize="15sp"
+            android:textColor="#888888"
+            android:background="@drawable/bg_suggestion_chip"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- 몇 시에 -->
+        <TextView
+            android:id="@+id/tvTime"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="시간 선택"
+            android:textSize="15sp"
+            android:textColor="#888888"
+            android:background="@drawable/bg_suggestion_chip"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:layout_marginBottom="32dp"/>
+
+        <!-- TODO: 24시간 원형 타임라인 뷰 추가 예정 -->
+
+        <Button
+            android:id="@+id/btnSave"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="일정 등록"
+            android:textSize="16sp"/>
+
+    </LinearLayout>
+
+</ScrollView>

@@ -1,4 +1,4 @@
-package com.example.myapplication;
+package com.example.myapplication.guardian.userchat.ui;
 
 import android.Manifest;
 import android.content.Intent;
@@ -22,6 +22,9 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.myapplication.R;
+import com.example.myapplication.common.model.ChatMessage;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.vosk.Model;
@@ -42,7 +45,7 @@ import okhttp3.*;
 public class UserChatActivity extends AppCompatActivity implements ChatAdapter.OnSuggestionClickListener, RecognitionListener {
 
     // 서버 URL (스크린샷 기준)
-    private final String SERVER_URL = "http://10.100.0.50:8080/nungil-server/api/v1/nungil/analyze";
+    private final String SERVER_URL = "http://10.100.0.51:8080/nungil-server/api/v1/nungil/analyze";
     private final OkHttpClient client = new OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
