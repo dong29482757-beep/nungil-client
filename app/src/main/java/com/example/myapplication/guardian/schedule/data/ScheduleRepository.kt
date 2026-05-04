@@ -13,35 +13,54 @@ class ScheduleRepository {
     private val userIdx    get() = Session.userIdx
 
     fun getSchedules(onResult: (ApiResult<List<Schedule>>) -> Unit) {
-        val path = "/schedule/$guardianId/$userIdx"
-        android.util.Log.d("ScheduleRepo", "요청 경로: $path")
+        val primaryPath = "/v1/guardian/schedules/$guardianId/$userIdx"
+        val fallbackPath = "/schedule/$guardianId/$userIdx"
+        android.util.Log.d("ScheduleRepo", "일정 요청(1차): $primaryPath")
+        requestSchedules(primaryPath) { first ->
+            when (first) {
+                is ApiResult.Success -> onResult(first)
+                is ApiResult.Error -> {
+                    android.util.Log.w("ScheduleRepo", "1차 경로 실패, fallback 시도: ${first.message}")
+                    requestSchedules(fallbackPath, onResult)
+                }
+            }
+        }
+    }
+
+    private fun requestSchedules(path: String, onResult: (ApiResult<List<Schedule>>) -> Unit) {
         ApiClient.get(path) { result ->
             when (result) {
                 is ApiResult.Success -> {
-                    android.util.Log.d("ScheduleRepo", "응답: ${result.data}")
+                    android.util.Log.d("ScheduleRepo", "응답($path): ${result.data}")
                     try {
-                        val arr = JSONObject(result.data).getJSONArray("schedules")
+                        val root = JSONObject(result.data)
+                        val arr = when {
+                            root.has("schedules") -> root.getJSONArray("schedules")
+                            root.has("result") && root.getJSONObject("result").has("schedules") ->
+                                root.getJSONObject("result").getJSONArray("schedules")
+                            else -> throw IllegalStateException("schedules 필드가 없습니다.")
+                        }
                         val list = mutableListOf<Schedule>()
                         for (i in 0 until arr.length()) {
                             val obj = arr.getJSONObject(i)
                             list.add(
                                 Schedule(
                                     scheduleId = obj.getInt("scheduleId"),
-                                    taskId     = obj.getInt("taskId"),
-                                    taskName   = obj.getString("taskName"),
-                                    status     = obj.getString("status"),
+                                    taskId = obj.getInt("taskId"),
+                                    taskName = obj.getString("taskName"),
+                                    status = obj.getString("status"),
                                     scheduledAt = parseScheduledAt(obj)
                                 )
                             )
                         }
                         onResult(ApiResult.Success(list))
                     } catch (e: Exception) {
-                        android.util.Log.e("ScheduleRepo", "파싱 실패: ${e.message}")
+                        android.util.Log.e("ScheduleRepo", "파싱 실패($path): ${e.message}")
                         onResult(ApiResult.Error("일정 파싱 실패: ${e.message}"))
                     }
                 }
                 is ApiResult.Error -> {
-                    android.util.Log.e("ScheduleRepo", "오류: ${result.message}")
+                    android.util.Log.e("ScheduleRepo", "오류($path): ${result.message}")
                     onResult(result)
                 }
             }
@@ -173,8 +192,8 @@ class ScheduleRepository {
                     try {
                         val json = JSONObject(result.data)
                         val status = json.optString("status", "")
-                        val isSuccess = status == "SUCCESS"
-                        onResult(ApiResult.Success(!isSuccess)) // true = conflict
+                        val hasConflict = status != "SUCCESS" // true = conflict
+                        onResult(ApiResult.Success(hasConflict))
                     } catch (e: Exception) {
                         onResult(ApiResult.Error("응답 파싱 실패: ${e.message}"))
                     }
