@@ -232,7 +232,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="📝 특이사항"
+                        android:text="📌 이번 일정 메모"
                         android:textSize="14sp"
                         android:textStyle="bold"
                         android:textColor="@color/colorPrimary"
@@ -241,7 +241,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="직접 입력하거나 🎙 버튼으로 음성 입력"
+                        android:text="이 일정에만 적용되는 내용을 입력하세요 (건강 정보 제외)"
                         android:textSize="12sp"
                         android:textColor="@color/textHint"
                         android:layout_marginBottom="8dp"/>
@@ -256,7 +256,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-                            android:hint="예: 지하철 대신 버스 이용">
+                            android:hint="예: 지하철 대신 버스 이용, 우산 필요, 지갑 챙기기">
 
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/etNote"

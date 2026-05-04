@@ -5,8 +5,8 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
-import android.widget.ProgressBar
 import android.widget.Toast
+import com.google.android.material.textfield.TextInputEditText
 import androidx.appcompat.app.AppCompatActivity
 import com.example.myapplication.R
 import com.example.myapplication.core.network.ApiClient
@@ -20,7 +20,7 @@ class SpecialNotesActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_special_notes)
 
-        val etNotes = findViewById<EditText>(R.id.etNotes)
+        val etNotes = findViewById<TextInputEditText>(R.id.etNotes)
         val btnNext = findViewById<Button>(R.id.btnNext)
 
         btnNext.setOnClickListener {
