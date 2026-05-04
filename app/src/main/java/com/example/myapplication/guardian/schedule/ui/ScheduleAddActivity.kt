@@ -17,6 +17,7 @@ import com.example.myapplication.core.network.ApiClient
 import com.example.myapplication.core.network.ApiResult
 import com.example.myapplication.guardian.schedule.data.ScheduleRepository
 import com.example.myapplication.model.Task
+import com.google.android.material.textfield.TextInputEditText
 import org.json.JSONObject
 import java.io.File
 import java.text.SimpleDateFormat
@@ -43,17 +44,13 @@ class ScheduleAddActivity : AppCompatActivity() {
     private lateinit var tvPrefilledDate: TextView
     private lateinit var tvPrefilledTime: TextView
     private lateinit var spinnerTask: Spinner
-    private lateinit var spinnerLocation: Spinner
-    private lateinit var etNote: EditText
+    private lateinit var etLocation: TextInputEditText
+    private lateinit var etNote: TextInputEditText
     private lateinit var btnRecord: ImageButton
     private lateinit var tvAnalyzeResult: TextView
     private lateinit var pbStepsLoading: ProgressBar
     private lateinit var tvStepTimeout: TextView
     private lateinit var llSteps: LinearLayout
-    private lateinit var btnSave: Button
-
-    private val locations = listOf("선택 안 함", "집", "병원", "복지관", "마트", "공원", "기타")
-    private var selectedLocation = "선택 안 함"
 
     private var mediaRecorder: MediaRecorder? = null
     private var recordingFile: File? = null
@@ -81,14 +78,13 @@ class ScheduleAddActivity : AppCompatActivity() {
         tvPrefilledDate  = findViewById(R.id.tvPrefilledDate)
         tvPrefilledTime  = findViewById(R.id.tvPrefilledTime)
         spinnerTask      = findViewById(R.id.spinnerTask)
-        spinnerLocation  = findViewById(R.id.spinnerLocation)
+        etLocation       = findViewById(R.id.etLocation)
         etNote           = findViewById(R.id.etNote)
         btnRecord        = findViewById(R.id.btnRecord)
         tvAnalyzeResult  = findViewById(R.id.tvAnalyzeResult)
         pbStepsLoading   = findViewById(R.id.pbStepsLoading)
         tvStepTimeout    = findViewById(R.id.tvStepTimeout)
         llSteps          = findViewById(R.id.llSteps)
-        btnSave          = findViewById(R.id.btnSave)
 
         // 뒤로 버튼
         findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
@@ -97,12 +93,15 @@ class ScheduleAddActivity : AppCompatActivity() {
         refreshDateTimeDisplay()
 
         // 날짜 변경 버튼
-        findViewById<Button>(R.id.btnChangeDate).setOnClickListener { showDatePicker() }
+        findViewById<com.google.android.material.button.MaterialButton>(R.id.btnChangeDate)
+            .setOnClickListener { showDatePicker() }
+
+        // 저장 버튼
+        val btnSave = findViewById<com.google.android.material.button.MaterialButton>(R.id.btnSave)
 
         setupTaskSpinner()
-        setupLocationSpinner()
         setupRecordButton()
-        setupSaveButton()
+        setupSaveButton(btnSave)
     }
 
     private fun refreshDateTimeDisplay() {
@@ -170,7 +169,7 @@ class ScheduleAddActivity : AppCompatActivity() {
                             val tv = TextView(this).apply {
                                 text      = "${i + 1}. $step"
                                 textSize  = 12f
-                                setTextColor(0xFFCCCCCC.toInt())
+                                setTextColor(0xFF444444.toInt())
                                 setPadding(0, 6, 0, 6)
                             }
                             llSteps.addView(tv)
@@ -179,19 +178,6 @@ class ScheduleAddActivity : AppCompatActivity() {
                     is ApiResult.Error -> { /* 단계 없어도 등록 가능 */ }
                 }
             }
-        }
-    }
-
-    private fun setupLocationSpinner() {
-        spinnerLocation.adapter = ArrayAdapter(
-            this, android.R.layout.simple_spinner_item, locations
-        ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
-
-        spinnerLocation.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) {
-                selectedLocation = locations[pos]
-            }
-            override fun onNothingSelected(p: AdapterView<*>?) {}
         }
     }
 
@@ -246,17 +232,18 @@ class ScheduleAddActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupSaveButton() {
+    private fun setupSaveButton(btnSave: com.google.android.material.button.MaterialButton) {
         btnSave.setOnClickListener {
             if (selectedTaskId == -1) {
                 Toast.makeText(this, "과업을 선택해주세요.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            val timeStr = "%02d:%02d".format(selectedHour, selectedMinute)
-            val note    = etNote.text.toString().trim()
+            val timeStr  = "%02d:%02d".format(selectedHour, selectedMinute)
+            val location = etLocation.text?.toString()?.trim() ?: ""
+            val note     = etNote.text?.toString()?.trim() ?: ""
 
             btnSave.isEnabled = false
-            repository.addSchedule(selectedTaskId, selectedDate, timeStr, selectedLocation, note) { result ->
+            repository.addSchedule(selectedTaskId, selectedDate, timeStr, location, note) { result ->
                 runOnUiThread {
                     btnSave.isEnabled = true
                     when (result) {

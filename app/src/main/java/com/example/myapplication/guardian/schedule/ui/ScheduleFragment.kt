@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
 import com.example.myapplication.guardian.schedule.viewmodel.ScheduleViewModel
 import com.example.myapplication.model.Schedule
+import com.google.android.material.chip.ChipGroup
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.text.SimpleDateFormat
 import java.util.*
@@ -40,6 +41,9 @@ class ScheduleFragment : Fragment() {
     private var selectedHour   = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
     private var selectedMinute = 0
 
+    // 필터 칩: "all" | "pending" | "completed"
+    private var currentFilter = "all"
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -53,10 +57,11 @@ class ScheduleFragment : Fragment() {
         tvScheduleHeader  = view.findViewById(R.id.tvScheduleHeader)
         tvEmpty           = view.findViewById(R.id.tvEmpty)
 
-        val rv    = view.findViewById<RecyclerView>(R.id.rvSchedule)
-        val fab   = view.findViewById<FloatingActionButton>(R.id.fabAdd)
-        val btnPrev = view.findViewById<ImageButton>(R.id.btnPrevDay)
-        val btnNext = view.findViewById<ImageButton>(R.id.btnNextDay)
+        val rv           = view.findViewById<RecyclerView>(R.id.rvSchedule)
+        val fab          = view.findViewById<FloatingActionButton>(R.id.fabAdd)
+        val btnPrev      = view.findViewById<ImageButton>(R.id.btnPrevDay)
+        val btnNext      = view.findViewById<ImageButton>(R.id.btnNextDay)
+        val chipGroup    = view.findViewById<ChipGroup>(R.id.chipGroupFilter)
 
         // 다이얼 설정
         timelineView.displayMode = true
@@ -74,6 +79,16 @@ class ScheduleFragment : Fragment() {
         adapter = ScheduleAdapter(mutableListOf()) { schedule -> confirmDelete(schedule) }
         rv.layoutManager = LinearLayoutManager(context)
         rv.adapter = adapter
+
+        // 필터 칩
+        chipGroup.setOnCheckedStateChangeListener { _, checkedIds ->
+            currentFilter = when {
+                checkedIds.contains(R.id.chipPending)  -> "pending"
+                checkedIds.contains(R.id.chipDone)     -> "completed"
+                else                                   -> "all"
+            }
+            refreshDateDisplay()
+        }
 
         // 날짜 이동 버튼
         btnPrev.setOnClickListener {
@@ -123,24 +138,36 @@ class ScheduleFragment : Fragment() {
             else     -> displayDateFmt.format(currentCal.time)
         }
 
-        // 해당 날짜 일정 필터링
+        // 해당 날짜 전체 일정 (다이얼용)
         val daySchedules = allSchedules.filter { it.scheduledAt.startsWith(dateKey) }
 
-        // 다이얼에 표시
+        // 다이얼에 표시 (필터 무관하게 항상 전체 표시)
         timelineView.setSchedules(daySchedules)
         val count = daySchedules.size
         val label = if (dateKey == todayKey) "오늘 ${count}개" else "${count}개"
         timelineView.centerLabel = label
 
-        // 목록
-        tvScheduleHeader.text = "${displayDateFmt.format(currentCal.time)} 일정 ${count}개"
-        if (daySchedules.isEmpty()) {
+        // 목록용 필터 적용
+        val filtered = when (currentFilter) {
+            "pending"   -> daySchedules.filter { it.status == "pending" }
+            "completed" -> daySchedules.filter { it.status == "completed" || it.status == "in_progress" }
+            else        -> daySchedules
+        }
+
+        // 헤더 텍스트
+        val filterLabel = when (currentFilter) {
+            "pending"   -> "예정 ${filtered.size}개"
+            "completed" -> "완료 ${filtered.size}개"
+            else        -> "일정 ${count}개"
+        }
+        tvScheduleHeader.text = "${displayDateFmt.format(currentCal.time)} $filterLabel"
+
+        if (filtered.isEmpty()) {
             tvEmpty.visibility = View.VISIBLE
             adapter.updateList(emptyList())
         } else {
             tvEmpty.visibility = View.GONE
-            // 시간 순 정렬
-            adapter.updateList(daySchedules.sortedBy { it.scheduledAt })
+            adapter.updateList(filtered.sortedBy { it.scheduledAt })
         }
     }
 

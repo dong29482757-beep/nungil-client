@@ -2,6 +2,8 @@ package com.example.myapplication.guardian.onboarding
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.view.View
@@ -35,32 +37,37 @@ class GuardianChatActivity : AppCompatActivity() {
     private lateinit var scrollChips: View
     private lateinit var chipGroup: ChipGroup
 
-    // 등록된 taskId 목록 (중복 방지용)
-    private val registeredTaskIds = mutableListOf<Int>()
+    private val registeredTaskIds   = mutableListOf<Int>()
     private val registeredTaskNames = mutableListOf<String>()
+    private val allTasks            = mutableListOf<Pair<Int, String>>()
+
+    // 봇이 응답 중일 때 입력 막기
+    private var isBotTyping = false
+
+    private val handler = Handler(Looper.getMainLooper())
 
     companion object {
         private const val MIN_TASKS = 2
         private const val MAX_TASKS = 4
     }
 
-    // 서버에서 받아온 전체 과업 목록
-    private val allTasks = mutableListOf<Pair<Int, String>>() // taskId to taskName
+    private val fallbackTasks = listOf(
+        Pair(0, "빨래하기"), Pair(0, "설거지하기"), Pair(0, "청소기 돌리기"),
+        Pair(0, "밥 먹기"), Pair(0, "약 먹기")
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_guardian_chat)
 
-        rvChat = findViewById(R.id.rvChat)
-        etInput = findViewById(R.id.etInput)
-        btnNext = findViewById(R.id.btnNext)
+        rvChat      = findViewById(R.id.rvChat)
+        etInput     = findViewById(R.id.etInput)
+        btnNext     = findViewById(R.id.btnNext)
         layoutInput = findViewById(R.id.layoutInput)
         scrollChips = findViewById(R.id.scrollChips)
-        chipGroup = findViewById(R.id.chipGroup)
+        chipGroup   = findViewById(R.id.chipGroup)
 
-        val lm = LinearLayoutManager(this)
-        lm.stackFromEnd = true
-        rvChat.layoutManager = lm
+        rvChat.layoutManager = LinearLayoutManager(this).also { it.stackFromEnd = true }
         adapter = ChatAdapter(chatList) {}
         rvChat.adapter = adapter
 
@@ -78,68 +85,52 @@ class GuardianChatActivity : AppCompatActivity() {
         }
     }
 
-    // 서버 연결 실패 시 보여줄 기본 과업 목록
-    private val fallbackTasks = listOf(
-        Pair(0, "빨래하기"), Pair(0, "설거지하기"), Pair(0, "청소기 돌리기"),
-        Pair(0, "밥 먹기"), Pair(0, "약 먹기")
-    )
-
-    // 과업 목록 먼저 받아온 뒤 채팅 시작
+    // ── 과업 목록 로드 → 채팅 시작 ──────────────────────────────────────
     private fun loadTasksAndStartChat() {
         ApiClient.get("/v1/guardian/tasks") { result ->
             when (result) {
                 is ApiResult.Success -> {
-                    android.util.Log.d("GuardianChat", "과업 목록 응답: ${result.data}")
                     try {
                         val arr = JSONObject(result.data).getJSONArray("tasks")
                         for (i in 0 until arr.length()) {
                             val obj = arr.getJSONObject(i)
                             allTasks.add(Pair(obj.getInt("taskId"), obj.getString("taskName")))
                         }
-                        android.util.Log.d("GuardianChat", "과업 ${allTasks.size}개 로드 완료")
-                    } catch (e: Exception) {
-                        android.util.Log.e("GuardianChat", "과업 목록 파싱 실패: ${e.message}")
+                    } catch (_: Exception) {
                         allTasks.addAll(fallbackTasks)
                     }
                 }
-                is ApiResult.Error -> {
-                    android.util.Log.e("GuardianChat", "과업 목록 로드 실패: ${result.message}")
-                    // 서버 실패 시 기본 목록으로 대체
-                    allTasks.addAll(fallbackTasks)
-                }
+                is ApiResult.Error -> allTasks.addAll(fallbackTasks)
             }
-            // 목록 로드 성공/실패 상관없이 채팅은 시작
             startChat()
         }
     }
 
+    // ── 인사 → 안내 (TTS 완료 후 순서대로) ─────────────────────────────
     private fun startChat() {
-        val msg1 = "안녕하세요! 저는 눈길 도우미 똘똘이예요!"
-        addTtoliMessage(msg1)
-        tts.speak(msg1, TextToSpeech.QUEUE_FLUSH, null, "msg1")
+        val greeting = "안녕하세요! 저는 눈길 도우미 똘똘이예요 😊"
+        botMessage(greeting)
+        tts.speak(greeting, TextToSpeech.QUEUE_FLUSH, null, "msg1")
 
         tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onStart(id: String) {}
             override fun onError(id: String) {}
             override fun onDone(id: String) {
-                when (id) {
-                    "msg1" -> {
-                        val msg2 = "사용자가 해볼 수 있는 활동을 등록해주세요! 아래 목록에서 선택하거나 직접 입력할 수 있어요."
-                        addTtoliMessage(msg2)
-                        tts.speak(msg2, TextToSpeech.QUEUE_FLUSH, null, "msg2")
-                    }
-                    "msg2" -> {
-                        runOnUiThread {
-                            layoutInput.visibility = View.VISIBLE
-                            showSuggestionChips()
-                        }
+                if (id == "msg1") {
+                    val guide = "사용자가 해볼 수 있는 활동을 ${MIN_TASKS}~${MAX_TASKS}개 골라주세요.\n아래 목록에서 탭하거나 직접 입력해도 돼요!"
+                    botMessage(guide, delay = 600)
+                    tts.speak(guide, TextToSpeech.QUEUE_FLUSH, null, "msg2")
+                } else if (id == "msg2") {
+                    runOnUiThread {
+                        layoutInput.visibility = View.VISIBLE
+                        showSuggestionChips()
                     }
                 }
             }
         })
     }
 
-    // 제안 칩 표시 (서버 목록 기반, 이미 등록된 항목 제외)
+    // ── 제안 칩 표시 ────────────────────────────────────────────────────
     private fun showSuggestionChips() {
         chipGroup.removeAllViews()
 
@@ -158,13 +149,18 @@ class GuardianChatActivity : AppCompatActivity() {
                 setChipBackgroundColorResource(R.color.colorPrimary)
                 setTextColor(resources.getColor(android.R.color.white, null))
                 setOnClickListener {
+                    if (isBotTyping) return@setOnClickListener   // 봇 응답 중 탭 무시
+
                     addUserMessage(taskName)
-                    // 칩 탭은 이미 taskId를 알고 있으니 검색 없이 바로 등록
+                    setBotTyping(true)
+
                     if (registeredTaskIds.contains(taskId)) {
-                        addTtoliMessage("'${taskName}'은 이미 등록하셨어요!")
+                        // 중복 → 한 마디로 끝
+                        botMessage("'$taskName'은 이미 등록하셨어요! 다른 걸 선택해볼까요?", delay = 400)
+                        handler.postDelayed({ setBotTyping(false) }, 600)
                     } else {
-                        addTtoliMessage("'${taskName}' 확인했어요!")
-                        registerToWhitelist(taskId, taskName)
+                        // 딜레이 후 등록 (바로 3개 뜨는 느낌 제거)
+                        handler.postDelayed({ registerToWhitelist(taskId, taskName) }, 500)
                     }
                 }
             }
@@ -173,110 +169,123 @@ class GuardianChatActivity : AppCompatActivity() {
         scrollChips.visibility = View.VISIBLE
     }
 
+    // ── 텍스트 직접 입력 ─────────────────────────────────────────────────
     private fun sendInput() {
+        if (isBotTyping) return
         val input = etInput.text.toString().trim()
         if (input.isEmpty()) return
         etInput.setText("")
         addUserMessage(input)
+        setBotTyping(true)
         searchAndRegister(input)
     }
 
     private fun searchAndRegister(input: String) {
         if (registeredTaskIds.size >= MAX_TASKS) {
-            addTtoliMessage("이미 최대 ${MAX_TASKS}개를 등록하셨어요!")
+            botMessage("이미 최대 ${MAX_TASKS}개를 등록하셨어요! '다음'을 눌러주세요.", delay = 400)
+            handler.postDelayed({ setBotTyping(false) }, 600)
             return
         }
 
-        addTtoliMessage("잠깐만요, 확인해볼게요!")
+        // "잠깐만요" 메시지 → 딜레이 후 API 호출
+        botMessage("잠깐만요, 확인해볼게요! 🔍", delay = 400)
 
-        val encodedInput = URLEncoder.encode(input, "UTF-8")
-        // 1단계: 과업 검색 (DB 저장 없이 taskId만 받아옴)
-        ApiClient.get("/tasks/search?item=$encodedInput") { result ->
-            when (result) {
-                is ApiResult.Success -> {
-                    android.util.Log.d("GuardianChat", "검색 응답: ${result.data}")
-                    try {
-                        val json = JSONObject(result.data)
-                        val found = json.optBoolean("found", false)
-                        if (found) {
-                            val taskId = json.getInt("taskId")
-                            val taskName = json.getString("taskName")
-
-                            // 중복 체크
-                            if (registeredTaskIds.contains(taskId)) {
-                                addTtoliMessage("'${taskName}'은 이미 등록하셨어요! 다른 활동을 알려주세요.")
-                                return@get
+        handler.postDelayed({
+            val encodedInput = URLEncoder.encode(input, "UTF-8")
+            ApiClient.get("/tasks/search?item=$encodedInput") { result ->
+                when (result) {
+                    is ApiResult.Success -> {
+                        try {
+                            val json = JSONObject(result.data)
+                            if (json.optBoolean("found", false)) {
+                                val taskId   = json.getInt("taskId")
+                                val taskName = json.getString("taskName")
+                                if (registeredTaskIds.contains(taskId)) {
+                                    botMessage("'$taskName'은 이미 등록하셨어요! 다른 활동을 알려주세요.", delay = 500)
+                                    handler.postDelayed({ setBotTyping(false) }, 800)
+                                } else {
+                                    registerToWhitelist(taskId, taskName)
+                                }
+                            } else {
+                                botMessage("'$input'을 찾지 못했어요 😅\n아래 목록에서 선택하거나 다르게 입력해보세요!", delay = 500)
+                                handler.postDelayed({ setBotTyping(false) }, 800)
                             }
-
-                            // 2단계: 화이트리스트에 즉시 개별 등록
-                            registerToWhitelist(taskId, taskName)
-
-                        } else {
-                            addTtoliMessage("'${input}'을 찾지 못했어요. 아래 목록에서 선택하거나 다르게 입력해보세요!")
+                        } catch (_: Exception) {
+                            botMessage("응답 처리 중 오류가 생겼어요. 다시 시도해주세요.", delay = 500)
+                            handler.postDelayed({ setBotTyping(false) }, 800)
                         }
-                    } catch (e: Exception) {
-                        addTtoliMessage("응답 처리 중 오류가 발생했어요.")
-                        android.util.Log.e("GuardianChat", "파싱 오류: ${result.data}")
+                    }
+                    is ApiResult.Error -> {
+                        botMessage("서버 연결에 실패했어요. 다시 시도해주세요.", delay = 500)
+                        handler.postDelayed({ setBotTyping(false) }, 800)
                     }
                 }
-                is ApiResult.Error -> {
-                    addTtoliMessage("서버 연결에 실패했어요. 다시 시도해주세요.")
-                    android.util.Log.e("GuardianChat", "네트워크 오류: ${result.message}")
-                }
             }
-        }
+        }, 800)   // "잠깐만요" 보여준 뒤 API 호출
     }
 
-    // 화이트리스트 개별 등록 (검색 후 바로 호출)
+    // ── 화이트리스트 등록 ────────────────────────────────────────────────
     private fun registerToWhitelist(taskId: Int, taskName: String) {
-        val body = JSONObject().apply {
-            put("taskId", taskId)
-        }.toString()
-
+        val body = JSONObject().apply { put("taskId", taskId) }.toString()
         val path = "/v1/guardian/settings/user/${Session.guardianId}/${Session.userIdx}/whitelist"
+
         ApiClient.post(path, body) { result ->
             when (result) {
                 is ApiResult.Success -> {
                     registeredTaskIds.add(taskId)
                     registeredTaskNames.add(taskName)
-                    addTtoliMessage("'${taskName}'을 등록했어요! (${registeredTaskIds.size}/$MAX_TASKS)")
+
+                    val left = MAX_TASKS - registeredTaskIds.size
+                    // ★ 핵심: 등록 확인 + 다음 안내를 메시지 1개로 합침
+                    val msg = when {
+                        left == 0 ->
+                            "'$taskName' 등록 완료! 🎉\n활동 목록이 다 찼어요. '다음'을 눌러주세요."
+                        registeredTaskIds.size >= MIN_TASKS ->
+                            "'$taskName' 등록했어요! (${registeredTaskIds.size}/$MAX_TASKS)\n$left개 더 추가하거나 '다음'으로 넘어가세요."
+                        else ->
+                            "'$taskName' 등록했어요! (${registeredTaskIds.size}/$MAX_TASKS)\n${left}개 더 추가해주세요."
+                    }
+                    botMessage(msg, delay = 400)
 
                     if (registeredTaskIds.size >= MIN_TASKS) {
                         runOnUiThread { btnNext.visibility = View.VISIBLE }
                     }
-                    if (registeredTaskIds.size < MAX_TASKS) {
-                        addTtoliMessage("다른 활동도 추가할 수 있어요!")
-                    } else {
-                        addTtoliMessage("최대 개수를 채웠어요! '다음'을 눌러주세요.")
-                    }
-                    runOnUiThread { showSuggestionChips() }
+
+                    // 칩 갱신 + 입력 재활성화
+                    handler.postDelayed({
+                        setBotTyping(false)
+                        showSuggestionChips()
+                    }, 700)
                 }
                 is ApiResult.Error -> {
-                    // 서버에서 MAX_ITEM_EXCEEDED 던질 경우 (클라이언트 MAX_TASKS 체크 뚫렸을 때)
-                    val msg = if (result.message.contains("MAX_ITEM_EXCEEDED", ignoreCase = true)) {
+                    val msg = if (result.message.contains("MAX_ITEM_EXCEEDED", ignoreCase = true))
                         "과업은 최대 ${MAX_TASKS}개까지만 등록할 수 있어요."
-                    } else {
-                        "등록 중 오류가 발생했어요. 다시 시도해주세요."
-                    }
-                    addTtoliMessage(msg)
-                    android.util.Log.e("GuardianChat", "등록 오류: ${result.message}")
+                    else
+                        "등록 중 오류가 생겼어요. 다시 시도해주세요."
+                    botMessage(msg, delay = 400)
+                    handler.postDelayed({ setBotTyping(false) }, 600)
                 }
             }
         }
     }
 
-    // "다음" 버튼 - 이미 등록 완료됐으니 화면 이동만
+    // ── 다음 화면으로 ────────────────────────────────────────────────────
     private fun saveWhitelistAndNext() {
         startActivity(Intent(this, SpecialNotesActivity::class.java))
         finish()
     }
 
-    private fun addTtoliMessage(text: String) {
-        runOnUiThread {
-            chatList.add(ChatMessage(text, ChatMessage.TYPE_OTHER, false, null, null))
-            adapter.notifyItemInserted(chatList.size - 1)
-            rvChat.smoothScrollToPosition(chatList.size - 1)
-        }
+    // ── UI 헬퍼 ─────────────────────────────────────────────────────────
+
+    /** 봇 메시지: delay ms 후에 말풍선 추가 */
+    private fun botMessage(text: String, delay: Long = 0) {
+        handler.postDelayed({
+            runOnUiThread {
+                chatList.add(ChatMessage(text, ChatMessage.TYPE_OTHER, false, null, null))
+                adapter.notifyItemInserted(chatList.size - 1)
+                rvChat.smoothScrollToPosition(chatList.size - 1)
+            }
+        }, delay)
     }
 
     private fun addUserMessage(text: String) {
@@ -287,7 +296,22 @@ class GuardianChatActivity : AppCompatActivity() {
         }
     }
 
+    /** 봇 응답 중 여부 → 칩/입력 활성화 제어 */
+    private fun setBotTyping(typing: Boolean) {
+        isBotTyping = typing
+        runOnUiThread {
+            etInput.isEnabled  = !typing
+            val btnSend = findViewById<Button>(R.id.btnSend)
+            btnSend?.isEnabled = !typing
+            // 칩도 흐리게
+            for (i in 0 until chipGroup.childCount) {
+                chipGroup.getChildAt(i).alpha = if (typing) 0.4f else 1.0f
+            }
+        }
+    }
+
     override fun onDestroy() {
+        handler.removeCallbacksAndMessages(null)
         tts.stop()
         tts.shutdown()
         super.onDestroy()
