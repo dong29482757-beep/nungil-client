@@ -1,84 +1,237 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
-    android:fitsSystemWindows="true">
+    android:orientation="vertical"
+    android:background="#1A1A1A">
 
+    <!-- 상단 툴바 -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="24dp">
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="8dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:src="@android:drawable/ic_menu_revert"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:tint="#FFFFFF"
+            android:contentDescription="뒤로"/>
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="일정 추가"
-            android:textSize="22sp"
+            android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="#333333"
-            android:layout_marginBottom="24dp"/>
+            android:textColor="#FFFFFF"
+            android:gravity="center"/>
 
-        <!-- 무엇을 (과업 선택) -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="무엇을 할까요?"
-            android:textSize="14sp"
-            android:textColor="#555555"
-            android:layout_marginBottom="8dp"/>
-
-        <Spinner
-            android:id="@+id/spinnerTask"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:background="@drawable/bg_suggestion_chip"
-            android:layout_marginBottom="24dp"/>
-
-        <!-- 언제 (날짜) -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="언제 할까요?"
-            android:textSize="14sp"
-            android:textColor="#555555"
-            android:layout_marginBottom="8dp"/>
-
-        <TextView
-            android:id="@+id/tvDate"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="날짜 선택"
-            android:textSize="15sp"
-            android:textColor="#888888"
-            android:background="@drawable/bg_suggestion_chip"
-            android:gravity="center_vertical"
-            android:paddingStart="16dp"
-            android:layout_marginBottom="16dp"/>
-
-        <!-- 몇 시에 -->
-        <TextView
-            android:id="@+id/tvTime"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="시간 선택"
-            android:textSize="15sp"
-            android:textColor="#888888"
-            android:background="@drawable/bg_suggestion_chip"
-            android:gravity="center_vertical"
-            android:paddingStart="16dp"
-            android:layout_marginBottom="32dp"/>
-
-        <!-- TODO: 24시간 원형 타임라인 뷰 추가 예정 -->
-
-        <Button
-            android:id="@+id/btnSave"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="일정 등록"
-            android:textSize="16sp"/>
+        <View android:layout_width="44dp" android:layout_height="44dp"/>
 
     </LinearLayout>
 
-</ScrollView>
+    <!-- 선택된 날짜/시간 표시 카드 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#252525"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="12dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📅 "
+            android:textSize="20sp"/>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvPrefilledDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"/>
+
+            <TextView
+                android:id="@+id/tvPrefilledTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="#1976D2"
+                android:layout_marginTop="2dp"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="날짜 변경"
+                android:textSize="11sp"
+                android:textColor="#888888"/>
+
+            <Button
+                android:id="@+id/btnChangeDate"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="변경"
+                android:textSize="12sp"
+                android:paddingHorizontal="12dp"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- 폼 스크롤 영역 -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="20dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- 무엇을 (SC-002) -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="무엇을 할까요?"
+                android:textSize="12sp"
+                android:textColor="#888888"
+                android:layout_marginBottom="6dp"/>
+
+            <Spinner
+                android:id="@+id/spinnerTask"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_input_dark"
+                android:layout_marginBottom="8dp"/>
+
+            <!-- 과업 단계 로딩 -->
+            <ProgressBar
+                android:id="@+id/pbStepsLoading"
+                android:layout_width="wrap_content"
+                android:layout_height="24dp"
+                android:layout_gravity="center_horizontal"
+                android:visibility="gone"/>
+
+            <TextView
+                android:id="@+id/tvStepTimeout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="⚠ 단계 로딩 실패"
+                android:textSize="11sp"
+                android:textColor="#FF9800"
+                android:visibility="gone"
+                android:layout_marginBottom="4dp"/>
+
+            <LinearLayout
+                android:id="@+id/llSteps"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:background="@drawable/bg_input_dark"
+                android:padding="12dp"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- 어디서 (SC-004) -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="어디서 할까요?"
+                android:textSize="12sp"
+                android:textColor="#888888"
+                android:layout_marginBottom="6dp"/>
+
+            <Spinner
+                android:id="@+id/spinnerLocation"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_input_dark"
+                android:layout_marginBottom="20dp"/>
+
+            <!-- 특이사항 + 녹음 (SC-005) -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="특이사항 (선택)"
+                android:textSize="12sp"
+                android:textColor="#888888"
+                android:layout_marginBottom="6dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+
+                <EditText
+                    android:id="@+id/etNote"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_weight="1"
+                    android:hint="직접 입력하거나 녹음하세요"
+                    android:textColorHint="#555555"
+                    android:textColor="#FFFFFF"
+                    android:textSize="13sp"
+                    android:background="@drawable/bg_input_dark"
+                    android:paddingStart="14dp"
+                    android:inputType="text"/>
+
+                <ImageButton
+                    android:id="@+id/btnRecord"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:layout_marginStart="8dp"
+                    android:src="@android:drawable/ic_btn_speak_now"
+                    android:background="@drawable/bg_input_dark"
+                    android:contentDescription="녹음"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvAnalyzeResult"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textColor="#1976D2"
+                android:visibility="gone"
+                android:layout_marginBottom="8dp"/>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- 하단 등록 버튼 -->
+    <Button
+        android:id="@+id/btnSave"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="일정 등록"
+        android:textSize="16sp"
+        android:layout_margin="16dp"/>
+
+</LinearLayout>

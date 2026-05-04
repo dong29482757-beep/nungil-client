@@ -17,11 +17,29 @@ class ScheduleViewModel : ViewModel() {
     private val _error = MutableLiveData<String>()
     val error: LiveData<String> = _error
 
+    private val _deleteSuccess = MutableLiveData<Boolean>()
+    val deleteSuccess: LiveData<Boolean> = _deleteSuccess
+
     fun loadSchedules() {
         repository.getSchedules { result ->
             when (result) {
                 is ApiResult.Success -> _schedules.postValue(result.data)
-                is ApiResult.Error -> _error.postValue(result.message)
+                is ApiResult.Error   -> _error.postValue(result.message)
+            }
+        }
+    }
+
+    fun deleteSchedule(scheduleId: Int) {
+        repository.deleteSchedule(scheduleId) { result ->
+            when (result) {
+                is ApiResult.Success -> {
+                    _deleteSuccess.postValue(true)
+                    loadSchedules() // 삭제 후 목록 갱신
+                }
+                is ApiResult.Error -> {
+                    _error.postValue("삭제 실패: ${result.message}")
+                    _deleteSuccess.postValue(false)
+                }
             }
         }
     }

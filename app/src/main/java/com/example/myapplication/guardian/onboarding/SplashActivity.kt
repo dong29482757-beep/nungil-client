@@ -6,8 +6,9 @@ import android.os.Handler
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import com.example.myapplication.R
+import com.example.myapplication.core.network.Session
+import com.example.myapplication.guardian.main.GuardianMainActivity
 
-// 스플래시 : 눈길 로고 1.5초
 class SplashActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -15,7 +16,15 @@ class SplashActivity : AppCompatActivity() {
         setContentView(R.layout.activity_splash)
 
         Handler(Looper.getMainLooper()).postDelayed({
-            startActivity(Intent(this, WelcomeActivity::class.java))
+            val next = when {
+                Session.isLoggedIn() && Session.isOnboarded ->
+                    Intent(this, GuardianMainActivity::class.java)
+                Session.isLoggedIn() && !Session.isOnboarded ->
+                    Intent(this, WelcomeActivity::class.java)
+                else ->
+                    Intent(this, LoginActivity::class.java)
+            }
+            startActivity(next)
             finish()
         }, 1500)
     }

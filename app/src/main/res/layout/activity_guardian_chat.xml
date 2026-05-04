@@ -14,6 +14,27 @@
         android:padding="12dp"
         android:clipToPadding="false"/>
 
+    <!-- 제안 칩 (은행 챗봇 스타일) -->
+    <HorizontalScrollView
+        android:id="@+id/scrollChips"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp"
+        android:visibility="gone">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:singleLine="true"
+            xmlns:app="http://schemas.android.com/apk/res-auto"/>
+
+    </HorizontalScrollView>
+
     <LinearLayout
         android:id="@+id/layoutInput"
         android:layout_width="match_parent"
@@ -44,7 +65,7 @@
                 android:layout_width="0dp"
                 android:layout_height="48dp"
                 android:layout_weight="1"
-                android:hint="활동을 입력하세요"
+                android:hint="활동을 직접 입력하세요"
                 android:textColorHint="#888888"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"

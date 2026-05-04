@@ -21,7 +21,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="true"
+        android:name=".NungilApp">
         <activity
             android:name=".guardian.userchat.ui.UserChatActivity"
             android:exported="true"/>
@@ -42,6 +43,7 @@
             android:name=".guardian.onboarding.GuardianChatActivity"
             android:windowSoftInputMode="adjustResize"/>
         <activity android:name=".guardian.onboarding.SpecialNotesActivity"/>
+        <activity android:name=".guardian.onboarding.LoginActivity"/>
         <activity android:name=".guardian.onboarding.SetupCompleteActivity"/>
         <activity android:name=".guardian.main.GuardianMainActivity"/>
         <activity android:name=".guardian.schedule.ui.ScheduleAddActivity"/>
