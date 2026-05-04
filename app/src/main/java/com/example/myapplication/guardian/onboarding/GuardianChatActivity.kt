@@ -241,7 +241,7 @@ class GuardianChatActivity : AppCompatActivity() {
                         left == 0 ->
                             "'$taskName' 등록 완료! 🎉\n활동 목록이 다 찼어요. '다음'을 눌러주세요."
                         registeredTaskIds.size >= MIN_TASKS ->
-                            "'$taskName' 등록했어요! (${registeredTaskIds.size}/$MAX_TASKS)\n$left개 더 추가하거나 '다음'으로 넘어가세요."
+                            "'$taskName' 등록했어요! (${registeredTaskIds.size}/$MAX_TASKS)\n${left}개 더 추가하거나 '다음'으로 넘어가세요."
                         else ->
                             "'$taskName' 등록했어요! (${registeredTaskIds.size}/$MAX_TASKS)\n${left}개 더 추가해주세요."
                     }
