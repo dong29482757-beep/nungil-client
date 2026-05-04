@@ -62,7 +62,7 @@
                 android:layout_margin="12dp"
                 card:cardCornerRadius="20dp"
                 card:cardElevation="4dp"
-                card:cardBackgroundColor="#1E1E2E">
+                card:cardBackgroundColor="#FFFFFF">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -91,7 +91,7 @@
                             android:layout_height="wrap_content"
                             android:text="선택: "
                             android:textSize="13sp"
-                            android:textColor="#8888AA"/>
+                            android:textColor="#7D8AAD"/>
 
                         <TextView
                             android:id="@+id/tvSelectedTime"
@@ -101,14 +101,14 @@
                             android:text="--:--"
                             android:textSize="20sp"
                             android:textStyle="bold"
-                            android:textColor="#FFFFFF"/>
+                            android:textColor="#4F5D82"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="드래그 후 + 탭"
                             android:textSize="11sp"
-                            android:textColor="#5555AA"/>
+                            android:textColor="#92A0C1"/>
 
                     </LinearLayout>
 
@@ -120,21 +120,21 @@
                         android:gravity="center"
                         android:paddingBottom="14dp">
 
-                        <View android:layout_width="10dp" android:layout_height="10dp" android:background="#5352ED"/>
+                        <View android:layout_width="10dp" android:layout_height="10dp" android:background="#E39A8D"/>
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text=" 예정   " android:textSize="11sp" android:textColor="#8888AA"/>
+                            android:text=" 예정   " android:textSize="11sp" android:textColor="#7D8AAD"/>
 
-                        <View android:layout_width="10dp" android:layout_height="10dp" android:background="#FFA502"/>
+                        <View android:layout_width="10dp" android:layout_height="10dp" android:background="#C98AB7"/>
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text=" 진행중   " android:textSize="11sp" android:textColor="#8888AA"/>
+                            android:text=" 진행중   " android:textSize="11sp" android:textColor="#7D8AAD"/>
 
-                        <View android:layout_width="10dp" android:layout_height="10dp" android:background="#2ED573"/>
+                        <View android:layout_width="10dp" android:layout_height="10dp" android:background="#88A6D8"/>
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text=" 완료   " android:textSize="11sp" android:textColor="#8888AA"/>
+                            android:text=" 완료   " android:textSize="11sp" android:textColor="#7D8AAD"/>
 
-                        <View android:layout_width="10dp" android:layout_height="10dp" android:background="#FF4757"/>
+                        <View android:layout_width="10dp" android:layout_height="10dp" android:background="#D95F74"/>
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text=" 지금" android:textSize="11sp" android:textColor="#8888AA"/>
+                            android:text=" 지금" android:textSize="11sp" android:textColor="#7D8AAD"/>
 
                     </LinearLayout>
 

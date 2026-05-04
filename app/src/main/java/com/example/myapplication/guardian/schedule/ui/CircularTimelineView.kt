@@ -44,12 +44,12 @@ class CircularTimelineView @JvmOverloads constructor(
     // 배경 원
     private val bgCirclePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
-        color = Color.parseColor("#1E1E2E")
+        color = Color.parseColor("#F6F8FF")
     }
     // 링 배경
     private val ringBgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        color = Color.parseColor("#2A2A3E")
+        color = Color.parseColor("#DDE4F5")
     }
     // 일정 블록
     private val blockPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -58,51 +58,51 @@ class CircularTimelineView @JvmOverloads constructor(
     }
     // 시간 눈금 (작은)
     private val tickSmallPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color       = Color.parseColor("#3A3A5E")
+        color       = Color.parseColor("#9EA9C8")
         style       = Paint.Style.STROKE
         strokeWidth = 1.5f
     }
     // 시간 눈금 (큰: 6시간마다)
     private val tickBigPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color       = Color.parseColor("#555577")
+        color       = Color.parseColor("#7D8AAD")
         style       = Paint.Style.STROKE
         strokeWidth = 2.5f
     }
     // 시간 레이블
     private val hourLabelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color     = Color.parseColor("#7777AA")
+        color     = Color.parseColor("#6B789B")
         textAlign = Paint.Align.CENTER
         typeface  = Typeface.DEFAULT_BOLD
     }
     // 중앙 메인 텍스트
     private val centerMainPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color     = Color.WHITE
+        color     = Color.parseColor("#5B688A")
         textAlign = Paint.Align.CENTER
         typeface  = Typeface.DEFAULT_BOLD
     }
     // 중앙 서브 텍스트
     private val centerSubPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color     = Color.parseColor("#6666AA")
+        color     = Color.parseColor("#92A0C1")
         textAlign = Paint.Align.CENTER
     }
     // 선택 시간 도트 (추가 모드)
     private val selDotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#4FC3F7")
+        color = Color.parseColor("#90A4E8")
         style = Paint.Style.FILL
     }
     private val selDotRingPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color       = Color.parseColor("#4FC3F7")
+        color       = Color.parseColor("#90A4E8")
         style       = Paint.Style.STROKE
         strokeWidth = 2f
         alpha       = 100
     }
     // 현재 시각 마커
     private val nowDotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#FF4757")
+        color = Color.parseColor("#D95F74")
         style = Paint.Style.FILL
     }
     private val nowHandPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color       = Color.parseColor("#FF4757")
+        color       = Color.parseColor("#D95F74")
         style       = Paint.Style.STROKE
         alpha       = 140
     }
@@ -115,7 +115,7 @@ class CircularTimelineView @JvmOverloads constructor(
     // 중앙 배지 배경
     private val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
-        color = Color.parseColor("#252540")
+        color = Color.parseColor("#EEF2FF")
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -188,9 +188,9 @@ class CircularTimelineView @JvmOverloads constructor(
             val h = p[0].toInt(); val m = p[1].toInt()
 
             val color = when (s.status) {
-                "completed"   -> Color.parseColor("#2ED573")   // 민트 그린
-                "in_progress" -> Color.parseColor("#FFA502")   // 주황
-                else          -> Color.parseColor("#5352ED")   // 보라 (예정)
+                "completed"   -> Color.parseColor("#88A6D8")
+                "in_progress" -> Color.parseColor("#C98AB7")
+                else          -> Color.parseColor("#E39A8D")
             }
             blockPaint.color = color
 
@@ -205,7 +205,7 @@ class CircularTimelineView @JvmOverloads constructor(
             val lx = (cx + labelR * cos(midAngle)).toFloat()
             val ly = (cy + labelR * sin(midAngle)).toFloat()
 
-            blockLabelPaint.textSize = sp(8.5f)
+            blockLabelPaint.textSize = sp(8f)
             blockLabelPaint.color    = color
 
             // 이름이 길면 자름
@@ -254,12 +254,12 @@ class CircularTimelineView @JvmOverloads constructor(
         if (displayMode) {
             // 중앙: centerLabel (예: "오늘 3개") + 날짜
             val label = centerLabel ?: "오늘"
-            centerMainPaint.textSize = sp(20f)
+            centerMainPaint.textSize = sp(18f)
             centerSubPaint.textSize  = sp(10f)
             canvas.drawText(label, cx, cy + sp(7f), centerMainPaint)
         } else {
             // 중앙: 선택된 시간 크게 + 안내
-            centerMainPaint.textSize = sp(26f)
+            centerMainPaint.textSize = sp(24f)
             centerSubPaint.textSize  = sp(9f)
             canvas.drawText("%02d:%02d".format(selectedHour, selectedMinute),
                 cx, cy + sp(8f), centerMainPaint)
