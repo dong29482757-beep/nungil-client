@@ -1,0 +1,94 @@
+package com.example.myapplication
+
+import android.graphics.Color
+import android.view.Gravity
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
+
+class ChatAdapter(
+    private val chatList: MutableList<ChatMessage>,
+    private val listener: OnSuggestionClickListener
+) : RecyclerView.Adapter<ChatAdapter.ChatViewHolder>() {
+
+    interface OnSuggestionClickListener {
+        fun onSuggestionClick(text: String?)
+    }
+
+    override fun getItemViewType(position: Int): Int {
+        return chatList[position].type
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChatViewHolder {
+        val layoutRes = if (viewType == ChatMessage.TYPE_MINE) {
+            R.layout.item_chat_mine
+        } else {
+            R.layout.item_chat_other
+        }
+        val view = LayoutInflater.from(parent.context).inflate(layoutRes, parent, false)
+        return ChatViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: ChatViewHolder, position: Int) {
+        val msg = chatList[position]
+
+        holder.tvContent?.apply {
+            if (!msg.content.isNullOrEmpty()) {
+                text = msg.content
+                visibility = View.VISIBLE
+            } else {
+                visibility = View.GONE
+            }
+        }
+
+        holder.ivImage?.apply {
+            if (msg.isImage && msg.imageBitmap != null) {
+                visibility = View.VISIBLE
+                setImageBitmap(msg.imageBitmap)
+            } else {
+                visibility = View.GONE
+            }
+        }
+
+        holder.layoutSuggestions?.apply {
+            removeAllViews()
+            msg.suggestions?.let { list ->
+                if (list.isNotEmpty()) {
+                    visibility = View.VISIBLE
+                    for (suggestionText in list) {
+                        val chip = TextView(context).apply {
+                            text = suggestionText
+                            textSize = 14f
+                            setTextColor(Color.parseColor("#1E88E5"))
+                            setBackgroundResource(R.drawable.bg_suggestion_chip)
+                            setPadding(30, 15, 30, 15)
+                            gravity = Gravity.CENTER
+
+                            layoutParams = LinearLayout.LayoutParams(
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                            ).apply { setMargins(0, 0, 15, 15) }
+
+                            setOnClickListener { listener.onSuggestionClick(suggestionText) }
+                        }
+                        addView(chip)
+                    }
+                } else {
+                    visibility = View.GONE
+                }
+            } ?: run { visibility = View.GONE }
+        }
+    }
+
+    override fun getItemCount(): Int = chatList.size
+
+    class ChatViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val tvContent: TextView? = itemView.findViewById(R.id.tvContent)
+        val ivImage: ImageView? = itemView.findViewById(R.id.ivImage)
+        val layoutSuggestions: LinearLayout? = itemView.findViewById(R.id.layoutSuggestions)
+    }
+}
