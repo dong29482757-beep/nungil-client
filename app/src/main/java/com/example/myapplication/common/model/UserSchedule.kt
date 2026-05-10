@@ -1,6 +1,6 @@
-package com.example.myapplication
+package com.example.myapplication.common.model
 
-data class Schedule(
+data class UserSchedule(
     val id: Int,
     val title: String,
     val taskDescription: String,

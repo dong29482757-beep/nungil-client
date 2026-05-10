@@ -31,17 +31,24 @@
         android:usesCleartextTraffic="true">
 
         <activity
-            android:name=".UserChatActivity"
+            android:name=".guardian.onboarding.SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".guardian.main.GuardianMainActivity" />
+        <activity android:name=".guardian.onboarding.WelcomeActivity"/>
+        <activity android:name=".guardian.onboarding.LoginActivity" />
+        <activity android:name=".guardian.onboarding.GuardianChatActivity"/>
+        <activity android:name=".guardian.onboarding.SpecialNotesActivity"/>
+        <activity android:name=".guardian.onboarding.SetupCompleteActivity"/>
+        <activity android:name=".guardian.schedule.ui.ScheduleAddActivity"/>
 
         <!-- 일정 알람 수신 BroadcastReceiver -->
         <receiver
-            android:name=".ScheduleAlarmReceiver"
+            android:name=".user.main.schedule.service.ScheduleAlarmReceiver"
             android:exported="false" />
 
     </application>

@@ -1,4 +1,4 @@
-package com.example.myapplication
+package com.example.myapplication.user.main.schedule.data
 
 import android.os.Build
 import android.util.Log
@@ -9,6 +9,8 @@ import okhttp3.RequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
@@ -130,7 +132,7 @@ object ScheduleRepository {
             try {
                 val request = Request.Builder()
                     .url("$BASE_URL/schedule/$scheduleId/complete")
-                    .patch(RequestBody.create(null, byteArrayOf()))
+                    .patch(RequestBody.Companion.create(null, byteArrayOf()))
                     .build()
                 client.newCall(request).execute()
             } catch (e: Exception) {
@@ -152,7 +154,7 @@ object ScheduleRepository {
                 .put("userIdx", userIdx)
                 .put("content", content)
                 .put("answer", answer)
-            val body = RequestBody.create("application/json".toMediaTypeOrNull(), json.toString())
+            val body = RequestBody.Companion.create("application/json".toMediaTypeOrNull(), json.toString())
             val request = Request.Builder()
                 .url("$BASE_URL/question/log")
                 .post(body)
@@ -177,7 +179,7 @@ object ScheduleRepository {
             try {
                 val request = Request.Builder()
                     .url("$BASE_URL/question/log/$questionId/complete")
-                    .patch(RequestBody.create(null, byteArrayOf()))
+                    .patch(RequestBody.Companion.create(null, byteArrayOf()))
                     .build()
                 client.newCall(request).execute()
             } catch (e: Exception) {
@@ -200,8 +202,8 @@ object ScheduleRepository {
         if (iso.isBlank()) return 0L
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                java.time.LocalDateTime.parse(iso)
-                    .atZone(java.time.ZoneId.systemDefault())
+                LocalDateTime.parse(iso)
+                    .atZone(ZoneId.systemDefault())
                     .toInstant().toEpochMilli()
             } else {
                 SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).parse(iso)?.time ?: 0L

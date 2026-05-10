@@ -1,8 +1,8 @@
-package com.example.myapplication
+package com.example.myapplication.common.model
 
 import android.graphics.Bitmap
 
-class ChatMessage(
+class UserChatMessage(
     var content: String?,
     val type: Int,
     val isImage: Boolean = false,

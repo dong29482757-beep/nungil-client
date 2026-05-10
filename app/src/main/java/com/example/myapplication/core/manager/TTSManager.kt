@@ -1,4 +1,4 @@
-package com.example.myapplication
+package com.example.myapplication.core.manager
 
 import android.content.Context
 import android.os.Bundle

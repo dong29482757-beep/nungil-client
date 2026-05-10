@@ -7,7 +7,6 @@
     android:background="#F0F2F5"
     android:fitsSystemWindows="true">
 
-    <!-- 배경 곰돌이 (중앙, 반투명) -->
     <ImageView
         android:id="@+id/ivBear"
         android:layout_width="260dp"
@@ -32,26 +31,24 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- 하단 흰 배경 -->
     <View
         android:id="@+id/bottomBarBg"
         android:layout_width="0dp"
         android:layout_height="110dp"
         android:background="#FFFFFF"
-        android:elevation="8dp"
+        android:elevation="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- 마이크 버튼 -->
     <androidx.cardview.widget.CardView
         android:id="@+id/cardNext"
         android:layout_width="80dp"
         android:layout_height="80dp"
-        android:elevation="12dp"
         app:cardBackgroundColor="#FFFFFF"
         app:cardCornerRadius="40dp"
-        app:cardElevation="6dp"
+        android:elevation="15dp"
+        android:translationZ="10dp"
         app:layout_constraintBottom_toTopOf="@+id/bottomBarBg"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -74,6 +71,7 @@
         android:layout_height="48dp"
         android:indeterminateTint="#1E88E5"
         android:visibility="gone"
+        android:elevation="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

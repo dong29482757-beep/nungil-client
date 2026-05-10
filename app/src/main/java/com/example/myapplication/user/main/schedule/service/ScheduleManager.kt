@@ -1,5 +1,6 @@
-package com.example.myapplication
+package com.example.myapplication.user.main.schedule.service
 
+import android.R
 import android.app.AlarmManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -8,6 +9,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import com.example.myapplication.user.main.schedule.data.ScheduleRepository
+import com.example.myapplication.user.main.ui.UserChatActivity
 
 class ScheduleManager(private val context: Context) {
 
@@ -81,7 +84,7 @@ class ScheduleManager(private val context: Context) {
         )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_dialog_info)
             .setContentTitle("📅 일정 시간이 됐어요!")
             .setContentText(title)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
