@@ -1,5 +1,4 @@
 package com.example.myapplication.user.chat
-
 import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -79,11 +78,9 @@ class UserChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickListe
     private var shouldLaunchCamera = false
     private val mainHandler = Handler(Looper.getMainLooper())
 
-    // 사용자 정보
     private var userSpecialNote = ""
     private var whitelistTaskNames = listOf<String>()
 
-    // 일정 수행 상태
     private var scheduleTitle = ""
     private var scheduleSteps = listOf<String>()
     private var scheduleNote = ""
@@ -114,7 +111,6 @@ class UserChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickListe
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_chat)
 
-        // 1. SharedPreferences에서 QR 정보 로드
         val prefs = getSharedPreferences("nungil_prefs", Context.MODE_PRIVATE)
         val userId = prefs.getString("user_id", null)
         if (userId == null) {
@@ -171,17 +167,14 @@ class UserChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickListe
             if (loadingBar.visibility == View.VISIBLE) return@setOnClickListener
 
             when {
-                // TTS 중이면 스킵
                 ttsManager.isSpeaking() -> {
                     ttsManager.stop()
                     handleTtsEndFlow()
                 }
-                // 녹음 중이면 취소
                 isRecording -> {
                     voiceRecorder.cancel()
                     resetToIdleState()
                 }
-                // 평상시 녹음 시작
                 else -> {
                     startRecordingFlow(manual = true)
                 }
@@ -204,16 +197,11 @@ class UserChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickListe
     private fun updateMicButtonUI(forceMic: Boolean = false) {
         runOnUiThread {
             val mic = btnMic as? ImageView ?: return@runOnUiThread
-
             val (iconRes, bgColor) = when {
-                ttsManager.isSpeaking() && !forceMic ->
-                    android.R.drawable.ic_media_next to Color.TRANSPARENT
-                isRecording && !forceMic ->
-                    android.R.drawable.ic_menu_close_clear_cancel to Color.parseColor("#FF5252")
-                else ->
-                    android.R.drawable.ic_btn_speak_now to Color.TRANSPARENT
+                ttsManager.isSpeaking() && !forceMic -> android.R.drawable.ic_media_next to Color.TRANSPARENT
+                isRecording && !forceMic -> android.R.drawable.ic_menu_close_clear_cancel to Color.parseColor("#FF5252")
+                else -> android.R.drawable.ic_btn_speak_now to Color.TRANSPARENT
             }
-
             mic.setImageResource(iconRes)
             btnMic.setBackgroundColor(bgColor)
         }
@@ -267,7 +255,6 @@ class UserChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickListe
         val builder = MultipartBody.Builder().setType(MultipartBody.FORM)
         val textMt = "text/plain; charset=utf-8".toMediaTypeOrNull()
 
-        // 최적화된 RequestBody 생성 방식
         builder.addFormDataPart("userId", null, USER_ID.toRequestBody(textMt))
         builder.addFormDataPart("historyJson", null, gson.toJson(conversationHistory).toRequestBody(textMt))
         finalText?.let { builder.addFormDataPart("textPrompt", null, it.toRequestBody(textMt)) }
@@ -282,11 +269,29 @@ class UserChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickListe
         val request = Request.Builder().url(SERVER_URL).post(builder.build()).build()
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
+                Log.e("ServerCheck", "네트워크 오류 발생: ${e.message}")
                 runOnUiThread { loadingBar.visibility = View.GONE; setBearMood(BearMood.BASIC); resetToIdleState() }
             }
+
             override fun onResponse(call: Call, response: Response) {
                 val body = response.body?.string() ?: ""
-                runOnUiThread { loadingBar.visibility = View.GONE; setBearMood(BearMood.BASIC); parseServerResponse(body) }
+
+                // [로그 추가] 서버 응답 원본 확인
+                Log.d("ServerCheck", "── 서버 응답 수신 ──")
+                Log.d("ServerCheck", "코드: ${response.code}")
+                Log.d("ServerCheck", "본문: $body")
+                Log.d("ServerCheck", "──────────────────")
+
+                runOnUiThread {
+                    loadingBar.visibility = View.GONE
+                    setBearMood(BearMood.BASIC)
+                    if (response.isSuccessful) {
+                        parseServerResponse(body)
+                    } else {
+                        Log.e("ServerCheck", "서버 응답 실패: ${response.code}")
+                        resetToIdleState()
+                    }
+                }
             }
         })
     }
@@ -323,8 +328,16 @@ class UserChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickListe
 
                 addMsg(answer, UserChatMessage.TYPE_OTHER, false, null, suggests)
                 ttsManager.speak(answer)
-            } else { resetToIdleState() }
-        } catch (e: Exception) { resetToIdleState() }
+                Log.d("ServerCheck", "파싱 및 화면 업데이트 성공")
+            } else {
+                Log.e("ServerCheck", "서버 status가 SUCCESS가 아님: ${root.optString("status")}")
+                resetToIdleState()
+            }
+        } catch (e: Exception) {
+            Log.e("ServerCheck", "JSON 파싱 중 에러 발생: ${e.message}")
+            e.printStackTrace()
+            resetToIdleState()
+        }
     }
 
     private fun startRecordingFlow(manual: Boolean) {
@@ -342,8 +355,6 @@ class UserChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickListe
     private fun openBackCamera() {
         val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
             putExtra("android.intent.extras.CAMERA_FACING", 0)
-            putExtra("android.intent.extras.LENS_FACING_FRONT", 0)
-            putExtra("android.intent.extra.USE_FRONT_CAMERA", false)
         }
         try { takePictureLauncher.launch(intent) } catch (e: Exception) { resetToIdleState() }
     }
@@ -352,7 +363,7 @@ class UserChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickListe
         isRecording = false
         shouldLaunchCamera = false
         updateMicButtonUI(forceMic = true)
-        runOnUiThread { voskManager.startListening() }
+        runOnUiThread { if (::voskManager.isInitialized) voskManager.startListening() }
     }
 
     private fun setBearMood(mood: BearMood) {
@@ -372,7 +383,6 @@ class UserChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickListe
         if (userSpecialNote.isNotBlank()) sb.append("특이사항: $userSpecialNote\n")
         if (whitelistTaskNames.isNotEmpty()) {
             sb.append("보호자가 허용한 활동: ${whitelistTaskNames.joinToString(", ")}\n")
-            sb.append("위 목록에 없는 활동은 안전을 위해 안내하지 말고 허용된 활동을 권유해주세요.\n")
         }
         sb.append("사용자는 중등도 지적장애가 있습니다. 짧고 쉬운 말로, 한 번에 한 가지만 말해주세요.")
         return sb.toString()
@@ -393,21 +403,13 @@ class UserChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickListe
                 .setMessage(title)
                 .setPositiveButton("하기") { _, _ -> startScheduleExecution(scheduleId, title) }
                 .setNegativeButton("나중에", null)
-                .setCancelable(true)
                 .show()
         }
     }
 
     private fun startScheduleExecution(scheduleId: String, title: String) {
         val id = scheduleId.toIntOrNull() ?: -1
-        if (id == -1 && scheduleSteps.isNotEmpty()) {
-            currentStepIndex = 0
-            sendSchedulePromptToAI()
-            return
-        }
         scheduleTitle = title
-        scheduleSteps = emptyList()
-        scheduleNote = ""
         currentScheduleId = id
         currentStepIndex = 0
         Thread {
@@ -423,7 +425,6 @@ class UserChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickListe
     private fun sendSchedulePromptToAI() {
         if (loadingBar.visibility == View.VISIBLE || isRecording) return
         voskManager.stopListening()
-        voiceMsgIndex = -1
         val prompt = buildSchedulePrompt()
         addMsg("📅 $scheduleTitle ${stepProgressLabel()}", UserChatMessage.TYPE_MINE, false, null, null)
         uploadToServer(null, null, prompt)
@@ -433,23 +434,14 @@ class UserChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickListe
         val userContext = buildUserContext()
         val noteStr = if (scheduleNote.isNotBlank()) "참고사항: $scheduleNote\n" else ""
         return if (scheduleSteps.isEmpty()) {
-            "$userContext\n[일정 수행 모드]\n보호자가 등록한 일정: $scheduleTitle\n${noteStr}" +
-                    "지금 '$scheduleTitle' 일정을 시작합니다. 짧고 쉬운 말로, 한 번에 한 가지만 안내해주세요."
+            "$userContext\n[일정 수행 모드]\n일정: $scheduleTitle\n${noteStr}일정을 시작합니다."
         } else {
             val stepDesc = scheduleSteps[currentStepIndex]
-            val total = scheduleSteps.size
-            val current = currentStepIndex + 1
-            "$userContext\n[일정 수행 모드]\n보호자가 등록한 일정: $scheduleTitle\n${noteStr}" +
-                    "전체 ${total}단계 중 ${current}단계\n현재 단계: $stepDesc\n" +
-                    "위 단계를 짧고 쉬운 말로 한 가지만 안내해주세요. 잘 했으면 크게 칭찬해주세요. " +
-                    "단계가 끝나면 '다음' 또는 '완료'라고 말하면 넘어간다고 알려주세요."
+            "$userContext\n[일정 수행 모드]\n일정: $scheduleTitle\n단계: $stepDesc"
         }
     }
 
-    private fun stepProgressLabel(): String {
-        if (scheduleSteps.isEmpty()) return "시작"
-        return "(${currentStepIndex + 1}/${scheduleSteps.size}단계)"
-    }
+    private fun stepProgressLabel() = if (scheduleSteps.isEmpty()) "시작" else "(${currentStepIndex + 1}/${scheduleSteps.size}단계)"
 
     private fun proceedToNextStep() {
         if (!isScheduleMode) return
@@ -463,10 +455,9 @@ class UserChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickListe
 
     private fun finishSchedule() {
         ScheduleRepository.completeSchedule(currentScheduleId)
-        currentStepIndex = -1; currentScheduleId = -1; scheduleTitle = ""; scheduleSteps = emptyList(); scheduleNote = ""
+        currentStepIndex = -1; currentScheduleId = -1
         setBearMood(BearMood.PRAISE)
-        mainHandler.postDelayed({ setBearMood(BearMood.BASIC) }, 4000)
-        val doneMsg = "수고했어요! 일정을 모두 완료했어요. 😊"
+        val doneMsg = "수고했어요! 일정을 완료했어요."
         addMsg(doneMsg, UserChatMessage.TYPE_OTHER, false, null, null)
         ttsManager.speak(doneMsg)
     }
@@ -475,7 +466,11 @@ class UserChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickListe
         super.onStart()
         if (::voskManager.isInitialized) voskManager.startListening()
         val filter = IntentFilter(ScheduleAlarmReceiver.ACTION_SCHEDULE_ALERT)
-        ContextCompat.registerReceiver(this, scheduleReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(scheduleReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(scheduleReceiver, filter)
+        }
     }
 
     override fun onStop() {
@@ -515,7 +510,7 @@ class UserChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickListe
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == 100 && ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) voskManager.initModel()
+        if (requestCode == 100 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) voskManager.initModel()
     }
 
     override fun onSuggestionClick(text: String?) {
