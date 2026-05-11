@@ -2,6 +2,7 @@ package com.example.myapplication.guardian.schedule.ui
 
 import android.Manifest
 import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.content.pm.PackageManager
 import android.media.MediaRecorder
 import android.os.Bundle
@@ -9,6 +10,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -96,10 +98,14 @@ class ScheduleAddActivity : AppCompatActivity() {
         findViewById<com.google.android.material.button.MaterialButton>(R.id.btnChangeDate)
             .setOnClickListener { showDatePicker() }
 
+        // SC-003: 시간 변경 (tvPrefilledTime 클릭)
+        tvPrefilledTime.setOnClickListener { showTimePicker() }
+
         // 저장 버튼
         val btnSave = findViewById<com.google.android.material.button.MaterialButton>(R.id.btnSave)
 
         setupTaskSpinner()
+        setupLocationPicker()
         setupRecordButton()
         setupSaveButton(btnSave)
     }
@@ -120,6 +126,40 @@ class ScheduleAddActivity : AppCompatActivity() {
             selectedDate = "%04d-%02d-%02d".format(y, m + 1, d)
             refreshDateTimeDisplay()
         }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+    }
+
+    // SC-003: 시간 선택
+    private fun showTimePicker() {
+        TimePickerDialog(this, { _, hour, minute ->
+            selectedHour   = hour
+            selectedMinute = minute
+            refreshDateTimeDisplay()
+        }, selectedHour, selectedMinute, true).show()
+    }
+
+    // SC-004: 장소 선택 드롭다운
+    private val locationOptions = arrayOf("세탁실", "부엌", "거실", "화장실", "방", "기타")
+
+    private fun setupLocationPicker() {
+        etLocation.isFocusable = false
+        etLocation.isClickable = true
+        etLocation.setOnClickListener { showLocationDialog() }
+    }
+
+    private fun showLocationDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("장소 선택")
+            .setItems(locationOptions) { _, which ->
+                if (locationOptions[which] == "기타") {
+                    etLocation.isFocusableInTouchMode = true
+                    etLocation.setText("")
+                    etLocation.requestFocus()
+                } else {
+                    etLocation.isFocusable = false
+                    etLocation.setText(locationOptions[which])
+                }
+            }
+            .show()
     }
 
     // SC-002: 과업 스피너 + 단계 조회
@@ -238,27 +278,33 @@ class ScheduleAddActivity : AppCompatActivity() {
                 Toast.makeText(this, "과업을 선택해주세요.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            val timeStr  = "%02d:%02d".format(selectedHour, selectedMinute)
-            val location = etLocation.text?.toString()?.trim() ?: ""
-            val note     = etNote.text?.toString()?.trim() ?: ""
+            val timeStr   = "%02d:%02d".format(selectedHour, selectedMinute)
+            val location  = etLocation.text?.toString()?.trim() ?: ""
+            val note      = etNote.text?.toString()?.trim() ?: ""
+            val taskName  = taskList.firstOrNull { it.taskId == selectedTaskId }?.taskName ?: "과업"
+            val locationLabel = if (location.isEmpty()) "장소 미지정" else location
 
-            btnSave.isEnabled = false
-            repository.addSchedule(selectedTaskId, selectedDate, timeStr, location, note) { result ->
-                runOnUiThread {
-                    btnSave.isEnabled = true
-                    when (result) {
-                        is ApiResult.Success -> {
-                            if (result.data) {   // true = conflict
-                                Toast.makeText(this, "⚠️ 같은 시간에 이미 일정이 있어요!", Toast.LENGTH_LONG).show()
-                            } else {
-                                Toast.makeText(this, "일정이 등록됐어요!", Toast.LENGTH_SHORT).show()
-                                finish()
+            // SC-008: 저장 확인 다이얼로그
+            AlertDialog.Builder(this)
+                .setTitle("일정 저장 확인")
+                .setMessage("📋 $taskName\n🕐 $selectedDate $timeStr\n📍 $locationLabel\n\n이 일정을 저장하고 알림을 설정할까요?")
+                .setPositiveButton("확인") { _, _ ->
+                    btnSave.isEnabled = false
+                    repository.addSchedule(selectedTaskId, selectedDate, timeStr, location, note) { result ->
+                        runOnUiThread {
+                            btnSave.isEnabled = true
+                            when (result) {
+                                is ApiResult.Success -> {
+                                    Toast.makeText(this, "일정이 등록됐어요!", Toast.LENGTH_SHORT).show()
+                                    finish()
+                                }
+                                is ApiResult.Error -> Toast.makeText(this, "등록 실패: ${result.message}", Toast.LENGTH_SHORT).show()
                             }
                         }
-                        is ApiResult.Error -> Toast.makeText(this, "등록 실패: ${result.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
-            }
+                .setNegativeButton("취소", null)
+                .show()
         }
     }
 

@@ -118,9 +118,10 @@ class ScheduleRepository {
                         val list = mutableListOf<Task>()
                         for (i in 0 until arr.length()) {
                             val obj = arr.getJSONObject(i)
+                            val name = obj.optString("item", "")
                             list.add(Task(
                                 taskId   = obj.getInt("taskId"),
-                                taskName = obj.getString("item")   // "taskName" 아니고 "item"
+                                taskName = name.ifEmpty { "알 수 없는 과업" }
                             ))
                         }
                         onResult(ApiResult.Success(list))
@@ -168,13 +169,33 @@ class ScheduleRepository {
         }
     }
 
+    // SM-002: 일정 시간 수정
+    fun updateScheduleTime(scheduleId: Int, date: String, time: String, onResult: (ApiResult<Boolean>) -> Unit) {
+        val scheduledAt = "${date}T${time}:00"
+        val body = JSONObject().apply { put("scheduledAt", scheduledAt) }.toString()
+        ApiClient.put("/v1/guardian/schedules/$scheduleId/time", body) { result ->
+            when (result) {
+                is ApiResult.Success -> {
+                    try {
+                        val status = JSONObject(result.data).optString("status", "")
+                        if (status == "SUCCESS") onResult(ApiResult.Success(true))
+                        else onResult(ApiResult.Error("수정 실패"))
+                    } catch (e: Exception) {
+                        onResult(ApiResult.Error("응답 파싱 실패: ${e.message}"))
+                    }
+                }
+                is ApiResult.Error -> onResult(result)
+            }
+        }
+    }
+
     fun addSchedule(
         taskId: Int,
         date: String,
         time: String,
         location: String = "",
         specialNote: String = "",
-        onResult: (ApiResult<Boolean>) -> Unit
+        onResult: (ApiResult<Unit>) -> Unit
     ) {
         val scheduledAt = "${date}T${time}:00"
         val body = JSONObject().apply {
@@ -182,8 +203,8 @@ class ScheduleRepository {
             put("idx", userIdx)
             put("taskId", taskId)
             put("scheduledAt", scheduledAt)
-            if (location.isNotEmpty() && location != "선택 안 함") put("location", location)
-            if (specialNote.isNotEmpty()) put("specialNote", specialNote)
+            put("location", if (location.isNotEmpty() && location != "선택 안 함") location else "")
+            put("specialNote", specialNote)
         }.toString()
 
         ApiClient.post("/v1/guardian/schedules", body) { result ->
@@ -192,8 +213,11 @@ class ScheduleRepository {
                     try {
                         val json = JSONObject(result.data)
                         val status = json.optString("status", "")
-                        val hasConflict = status != "SUCCESS" // true = conflict
-                        onResult(ApiResult.Success(hasConflict))
+                        if (status == "SUCCESS") onResult(ApiResult.Success(Unit))
+                        else {
+                            val msg = json.optString("message", "").takeIf { it.isNotEmpty() && it != "null" } ?: "등록 실패"
+                            onResult(ApiResult.Error(msg))
+                        }
                     } catch (e: Exception) {
                         onResult(ApiResult.Error("응답 파싱 실패: ${e.message}"))
                     }

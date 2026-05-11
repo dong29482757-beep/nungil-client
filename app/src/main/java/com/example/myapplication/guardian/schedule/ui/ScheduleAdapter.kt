@@ -1,5 +1,4 @@
 package com.example.myapplication.guardian.schedule.ui
-
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,7 +10,8 @@ import com.example.myapplication.model.Schedule
 
 class ScheduleAdapter(
     private val list: MutableList<Schedule>,
-    private val onDelete: (Schedule) -> Unit = {}
+    private val onDelete: (Schedule) -> Unit = {},
+    private val onEdit: (Schedule) -> Unit = {}
 ) : RecyclerView.Adapter<ScheduleAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -67,12 +67,14 @@ class ScheduleAdapter(
         // completed 일정은 흐리게
         holder.itemView.alpha = if (s.status == "completed") 0.65f else 1.0f
 
-        // 삭제: pending만 가능
+        // 삭제·수정: pending만 가능
         if (s.status == "pending") {
             holder.btnDelete.visibility = View.VISIBLE
             holder.btnDelete.setOnClickListener { onDelete(s) }
+            holder.itemView.setOnClickListener { onEdit(s) }
         } else {
             holder.btnDelete.visibility = View.INVISIBLE
+            holder.itemView.setOnClickListener(null)
         }
     }
 }

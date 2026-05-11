@@ -1,5 +1,7 @@
 package com.example.myapplication.guardian.schedule.ui
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -76,7 +78,11 @@ class ScheduleFragment : Fragment() {
         }
 
         // RecyclerView
-        adapter = ScheduleAdapter(mutableListOf()) { schedule -> confirmDelete(schedule) }
+        adapter = ScheduleAdapter(
+            mutableListOf(),
+            onDelete = { schedule -> confirmDelete(schedule) },
+            onEdit   = { schedule -> showEditDialog(schedule) }
+        )
         rv.layoutManager = LinearLayoutManager(context)
         rv.adapter = adapter
 
@@ -120,6 +126,9 @@ class ScheduleFragment : Fragment() {
         }
         viewModel.deleteSuccess.observe(viewLifecycleOwner) { ok ->
             if (ok) Toast.makeText(context, "일정이 삭제됐어요.", Toast.LENGTH_SHORT).show()
+        }
+        viewModel.updateSuccess.observe(viewLifecycleOwner) { ok ->
+            if (ok) Toast.makeText(context, "일정 시간이 변경됐어요.", Toast.LENGTH_SHORT).show()
         }
 
         // 초기 날짜 표시
@@ -176,6 +185,36 @@ class ScheduleFragment : Fragment() {
             .setTitle("일정 삭제")
             .setMessage("'${schedule.taskName}' 일정을 삭제할까요?")
             .setPositiveButton("삭제") { _, _ -> viewModel.deleteSchedule(schedule.scheduleId) }
+            .setNegativeButton("취소", null)
+            .show()
+    }
+
+    // SM-002: 일정 시간 수정 다이얼로그
+    private fun showEditDialog(schedule: Schedule) {
+        val parts = schedule.scheduledAt.split("T")
+        val currentDate = parts.getOrElse(0) { filterDateFmt.format(Calendar.getInstance().time) }
+        val timeParts   = parts.getOrElse(1) { "09:00:00" }.split(":")
+        var editHour    = timeParts.getOrElse(0) { "9" }.toIntOrNull() ?: 9
+        var editMinute  = timeParts.getOrElse(1) { "0" }.toIntOrNull() ?: 0
+        var editDate    = currentDate
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("'${schedule.taskName}' 일정 수정")
+            .setMessage("날짜: $editDate\n시간: %02d:%02d\n\n날짜 또는 시간을 변경할 수 있어요.".format(editHour, editMinute))
+            .setNeutralButton("날짜 변경") { _, _ ->
+                val cal = Calendar.getInstance()
+                DatePickerDialog(requireContext(), { _, y, m, d ->
+                    editDate = "%04d-%02d-%02d".format(y, m + 1, d)
+                    TimePickerDialog(requireContext(), { _, h, min ->
+                        viewModel.updateScheduleTime(schedule.scheduleId, editDate, "%02d:%02d".format(h, min))
+                    }, editHour, editMinute, true).show()
+                }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+            }
+            .setPositiveButton("시간만 변경") { _, _ ->
+                TimePickerDialog(requireContext(), { _, h, min ->
+                    viewModel.updateScheduleTime(schedule.scheduleId, editDate, "%02d:%02d".format(h, min))
+                }, editHour, editMinute, true).show()
+            }
             .setNegativeButton("취소", null)
             .show()
     }

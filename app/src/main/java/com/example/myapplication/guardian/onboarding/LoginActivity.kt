@@ -2,6 +2,7 @@ package com.example.myapplication.guardian.onboarding
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -9,10 +10,12 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.myapplication.R
+import com.example.myapplication.core.fcm.NungilFirebaseMessagingService
 import com.example.myapplication.core.network.ApiClient
 import com.example.myapplication.core.network.ApiResult
 import com.example.myapplication.core.network.Session
 import com.example.myapplication.guardian.main.GuardianMainActivity
+import com.google.firebase.messaging.FirebaseMessaging
 import org.json.JSONObject
 
 class LoginActivity : AppCompatActivity() {
@@ -67,6 +70,7 @@ class LoginActivity : AppCompatActivity() {
                                     tvError.visibility = View.VISIBLE
                                 }
                             } catch (e: Exception) {
+                                Log.e("MyProjectTag", "오류가 발생했습니다: ${e.message}", e)
                                 tvError.text = "로그인 응답 처리 오류"
                                 tvError.visibility = View.VISIBLE
                             }
@@ -82,6 +86,9 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun navigateAfterLogin() {
+        FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+            NungilFirebaseMessagingService.registerTokenWithServer(token)
+        }
         val next = if (Session.isOnboarded) {
             Intent(this, GuardianMainActivity::class.java)
         } else {

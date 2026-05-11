@@ -8,6 +8,7 @@ import android.os.Looper
 import android.widget.VideoView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.myapplication.R
+import com.example.myapplication.guardian.qr.QrScanActivity
 
 // IS-001 : 똘똘이 풀스크린 영상
 class WelcomeActivity : AppCompatActivity() {
@@ -36,7 +37,9 @@ class WelcomeActivity : AppCompatActivity() {
         if (moved) return
         moved = true
         handler.removeCallbacksAndMessages(null)
-        startActivity(Intent(this, GuardianChatActivity::class.java))
+        startActivity(Intent(this, QrScanActivity::class.java).apply {
+            putExtra(QrScanActivity.EXTRA_FROM_ONBOARDING, true)
+        })
         finish()
     }
 }

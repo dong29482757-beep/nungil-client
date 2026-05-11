@@ -29,9 +29,6 @@
         android:theme="@style/Theme.MyApplication"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".UserOrGuardianActivity"
-            android:exported="false" />
-        <activity
             android:name=".SplashActivity"
             android:exported="true">
             <intent-filter>
@@ -40,18 +37,38 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".RoleSelectActivity"/>
         <activity android:name=".guardian.main.GuardianMainActivity" />
         <activity android:name=".guardian.onboarding.WelcomeActivity" />
         <activity android:name=".guardian.onboarding.LoginActivity" />
         <activity android:name=".guardian.onboarding.GuardianChatActivity" />
         <activity android:name=".guardian.onboarding.SpecialNotesActivity" />
         <activity android:name=".guardian.onboarding.SetupCompleteActivity" />
-        <activity android:name=".guardian.schedule.ui.ScheduleAddActivity" /> <!-- 일정 알람 수신 BroadcastReceiver -->
+        <activity android:name=".guardian.schedule.ui.ScheduleAddActivity" />
         <activity android:name=".user.UserStartActivity"/>
         <activity android:name=".user.qr.UserQrActivity"/>
+        <activity android:name=".guardian.qr.QrScanActivity"/>
+        <activity android:name=".user.chat.UserChatActivity"/>
+        <activity
+            android:name=".guardian.notification.NotificationDialogActivity"
+            android:theme="@style/Theme.AppCompat.Dialog.Alert"
+            android:exported="false"/>
+        <!-- FCM 푸시 알림 -->
+        <service
+            android:name=".core.fcm.NungilFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <!-- 일정 알람 수신 BroadcastReceiver -->
         <receiver
             android:name=".user.schedule.service.ScheduleAlarmReceiver"
-            android:exported="false" />
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

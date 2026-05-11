@@ -51,7 +51,7 @@ class SplashActivity : AppCompatActivity() {
 
         // 1.5초 후 무조건 선택 화면(UserOrGuardianActivity)으로 이동
         Handler(Looper.getMainLooper()).postDelayed({
-            val intent = Intent(this, UserOrGuardianActivity::class.java)
+            val intent = Intent(this, RoleSelectActivity::class.java)
             startActivity(intent)
             finish()
         }, 1500)

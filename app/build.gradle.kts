@@ -77,4 +77,7 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     debugImplementation("androidx.compose.ui:ui-tooling:$composeVersion")
     debugImplementation("androidx.compose.ui:ui-test-manifest:$composeVersion")
+
+    implementation(platform("com.google.firebase:firebase-bom:33.1.0")) // 버전 살짝 올림
+    implementation("com.google.firebase:firebase-messaging-ktx")
 }

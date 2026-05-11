@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
 import com.example.myapplication.common.model.ChatMessage
 import com.example.myapplication.core.network.ApiClient
+import com.example.myapplication.guardian.main.GuardianMainActivity
 import com.example.myapplication.core.network.ApiResult
 import com.example.myapplication.core.network.Session
 import com.google.android.material.chip.Chip
@@ -27,7 +28,7 @@ import java.util.Locale
 // ChatAdapter.OnSuggestionClickListener 인터페이스를 상속받아 오류를 해결합니다.
 class GuardianChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickListener {
 
-    private lateinit var tts: TextToSpeech
+    private var tts: TextToSpeech? = null
     private val chatList = mutableListOf<ChatMessage>()
     private lateinit var adapter: ChatAdapter
     private lateinit var rvChat: RecyclerView
@@ -78,10 +79,51 @@ class GuardianChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickL
             if (actionId == EditorInfo.IME_ACTION_SEND) { sendInput(); true } else false
         }
 
-        tts = TextToSpeech(this) { status ->
-            if (status == TextToSpeech.SUCCESS) {
-                tts.language = Locale.KOREAN
-                loadTasksAndStartChat()
+        checkWhitelistAndProceed()
+    }
+
+    private fun checkWhitelistAndProceed() {
+        val path = "/v1/guardian/settings/user/${Session.guardianId}/${Session.userIdx}/whitelist"
+        ApiClient.get(path) { result ->
+            runOnUiThread {
+                val hasItems = when (result) {
+                    is ApiResult.Success -> {
+                        try {
+                            val root = JSONObject(result.data)
+                            val arr  = root.getJSONObject("result").getJSONArray("allowedItems")
+                            arr.length() > 0
+                        } catch (e: Exception) { false }
+                    }
+                    is ApiResult.Error -> false
+                }
+                if (hasItems) {
+                    Session.isOnboarded = true
+                    startActivity(Intent(this, GuardianMainActivity::class.java))
+                    finish()
+                } else {
+                    tts = TextToSpeech(this) { status ->
+                        if (status == TextToSpeech.SUCCESS) {
+                            tts?.language = Locale.KOREAN
+                            tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                                override fun onStart(id: String) {}
+                                override fun onError(id: String) {}
+                                override fun onDone(id: String) {
+                                    if (id == "msg1") {
+                                        val guide = "사용자가 해볼 수 있는 활동을 ${MIN_TASKS}~${MAX_TASKS}개 골라주세요."
+                                        botMessage(guide, delay = 600)
+                                        tts?.speak(guide, TextToSpeech.QUEUE_FLUSH, null, "msg2")
+                                    } else if (id == "msg2") {
+                                        runOnUiThread {
+                                            layoutInput.visibility = View.VISIBLE
+                                            showSuggestionChips()
+                                        }
+                                    }
+                                }
+                            })
+                            loadTasksAndStartChat()
+                        }
+                    }
+                }
             }
         }
     }
@@ -117,24 +159,7 @@ class GuardianChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickL
     private fun startChat() {
         val greeting = "안녕하세요! 저는 눈길 도우미 똘똘이예요 😊"
         botMessage(greeting)
-        tts.speak(greeting, TextToSpeech.QUEUE_FLUSH, null, "msg1")
-
-        tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-            override fun onStart(id: String) {}
-            override fun onError(id: String) {}
-            override fun onDone(id: String) {
-                if (id == "msg1") {
-                    val guide = "사용자가 해볼 수 있는 활동을 ${MIN_TASKS}~${MAX_TASKS}개 골라주세요."
-                    botMessage(guide, delay = 600)
-                    tts.speak(guide, TextToSpeech.QUEUE_FLUSH, null, "msg2")
-                } else if (id == "msg2") {
-                    runOnUiThread {
-                        layoutInput.visibility = View.VISIBLE
-                        showSuggestionChips()
-                    }
-                }
-            }
-        })
+        tts?.speak(greeting, TextToSpeech.QUEUE_FLUSH, null, "msg1")
     }
 
     private fun showSuggestionChips() {
@@ -156,7 +181,7 @@ class GuardianChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickL
                     if (isBotTyping) return@setOnClickListener
                     addUserMessage(taskName)
                     setBotTyping(true)
-                    registerToWhitelist(taskId, taskName)
+                    searchAndRegister(taskName)
                 }
             }
             chipGroup.addView(chip)
@@ -186,7 +211,7 @@ class GuardianChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickL
         handler.postDelayed({
             try {
                 val encodedInput = URLEncoder.encode(input, "UTF-8")
-                ApiClient.get("/tasks/search?item=$encodedInput") { result ->
+                ApiClient.get("/v1/guardian/tasks/search?item=$encodedInput") { result ->
                     when (result) {
                         is ApiResult.Success -> {
                             val json = JSONObject(result.data)
@@ -216,22 +241,38 @@ class GuardianChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickL
         ApiClient.post(path, body) { result ->
             when (result) {
                 is ApiResult.Success -> {
-                    registeredTaskIds.add(taskId)
-                    registeredTaskNames.add(taskName)
-                    val left = MAX_TASKS - registeredTaskIds.size
-                    val msg = "'$taskName' 등록! (${registeredTaskIds.size}/$MAX_TASKS)"
-                    botMessage(msg, delay = 400)
-
-                    if (registeredTaskIds.size >= MIN_TASKS) {
-                        runOnUiThread { btnNext.visibility = View.VISIBLE }
+                    try {
+                        val json = JSONObject(result.data)
+                        val status = json.optString("status", "")
+                        if (status == "SUCCESS") {
+                            registeredTaskIds.add(taskId)
+                            registeredTaskNames.add(taskName)
+                            val msg = "'$taskName' 등록! (${registeredTaskIds.size}/$MAX_TASKS)"
+                            botMessage(msg, delay = 400)
+                            if (registeredTaskIds.size >= MIN_TASKS) {
+                                runOnUiThread { btnNext.visibility = View.VISIBLE }
+                            }
+                            handler.postDelayed({
+                                setBotTyping(false)
+                                showSuggestionChips()
+                            }, 700)
+                        } else {
+                            val errorCode = json.optString("errorCode", "")
+                            val msg = when (errorCode) {
+                                "ITEM_EXISTS"       -> "'$taskName'은 이미 등록된 과업이에요."
+                                "MAX_ITEM_EXCEEDED" -> "과업은 최대 ${MAX_TASKS}개까지 등록할 수 있어요."
+                                else                -> "등록에 실패했어요."
+                            }
+                            botMessage(msg, delay = 400)
+                            handler.postDelayed({ setBotTyping(false) }, 600)
+                        }
+                    } catch (e: Exception) {
+                        botMessage("응답 처리 오류가 발생했어요.", delay = 400)
+                        handler.postDelayed({ setBotTyping(false) }, 600)
                     }
-                    handler.postDelayed({
-                        setBotTyping(false)
-                        showSuggestionChips()
-                    }, 700)
                 }
                 is ApiResult.Error -> {
-                    botMessage("이미 등록되었거나 오류가 발생했습니다.", delay = 400)
+                    botMessage("서버 연결 오류가 발생했어요.", delay = 400)
                     handler.postDelayed({ setBotTyping(false) }, 600)
                 }
             }
@@ -274,8 +315,8 @@ class GuardianChatActivity : AppCompatActivity(), ChatAdapter.OnSuggestionClickL
 
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
-        tts.stop()
-        tts.shutdown()
+        tts?.stop()
+        tts?.shutdown()
         super.onDestroy()
     }
 }
