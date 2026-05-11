@@ -3,24 +3,29 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
+    <!-- 브랜드 컬러 -->
     <color name="colorPrimary">#1976D2</color>
     <color name="colorPrimaryDark">#115293</color>
     <color name="colorPrimaryLight">#E3F2FD</color>
-    <color name="colorAccent">#1976D2</color>
 
-    <color name="bgPage">#F5F7FA</color>
-    <color name="bgCard">#FFFFFF</color>
-    <color name="bgInput">#FFFFFF</color>
+    <!-- 배경 -->
+    <color name="bgPage">#F5F7FA</color>       <!-- 전체 페이지 배경 -->
+    <color name="bgCard">#FFFFFF</color>       <!-- 카드/폼 배경 -->
+    <color name="bgInput">#FFFFFF</color>      <!-- 입력창 배경 -->
     <color name="bgInputBorder">#E0E0E0</color>
 
+    <!-- 텍스트 -->
     <color name="textPrimary">#1A1A1A</color>
     <color name="textSecondary">#666666</color>
     <color name="textHint">#AAAAAA</color>
-    <color name="colorSecondaryText">#757575</color>
 
+    <!-- 상태 -->
     <color name="statusPending">#1976D2</color>
     <color name="statusInProgress">#F57C00</color>
     <color name="statusCompleted">#388E3C</color>
-    <color name="colorError">#D32F2F</color>
+
+    <!-- 기타 -->
+    <color name="colorSecondaryText">#757575</color>
     <color name="colorDivider">#E0E0E0</color>
+    <color name="colorError">#D32F2F</color>
 </resources>

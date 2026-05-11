@@ -1,4 +1,4 @@
-package com.example.myapplication.user.main.ui
+package com.example.myapplication.user.chat
 
 import android.graphics.Color
 import android.view.Gravity
@@ -22,11 +22,12 @@ class ChatAdapter(
     }
 
     override fun getItemViewType(position: Int): Int {
+        // UserChatMessage에 정의된 TYPE_MINE(0), TYPE_OTHER(1) 반환
         return chatList[position].type
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChatViewHolder {
-        // ChatMessage.TYPE_MINE으로 직접 참조 (Companion 생략 가능)
+        // viewType에 따라 나(Mine)와 상대방(Other) 레이아웃 결정
         val layoutRes = if (viewType == UserChatMessage.TYPE_MINE) {
             R.layout.item_chat_mine
         } else {
@@ -39,32 +40,35 @@ class ChatAdapter(
     override fun onBindViewHolder(holder: ChatViewHolder, position: Int) {
         val msg = chatList[position]
 
-        // [수정] apply 내부에서는 TextView.xxx 가 아니라 그냥 xxx()를 호출해야 합니다.
+        // 1. 텍스트 내용 설정
         holder.tvContent?.apply {
             if (!msg.content.isNullOrEmpty()) {
-                text = msg.content      // TextView.setText 대신 text 속성 사용
-                visibility = View.VISIBLE // View.setVisibility 대신 visibility 속성 사용
+                text = msg.content
+                visibility = View.VISIBLE
             } else {
                 visibility = View.GONE
             }
         }
 
+        // 2. 이미지 설정 (이미지 메시지인 경우)
         holder.ivImage?.apply {
             if (msg.isImage && msg.imageBitmap != null) {
                 visibility = View.VISIBLE
-                setImageBitmap(msg.imageBitmap) // ImageView.setImageBitmap 아님
+                setImageBitmap(msg.imageBitmap)
             } else {
                 visibility = View.GONE
             }
         }
 
+        // 3. 추천 질문(Suggestions) 칩 생성
         holder.layoutSuggestions?.apply {
-            removeAllViews() // ViewGroup.removeAllViews 아님
+            removeAllViews() // 기존에 생성된 칩 제거
             msg.suggestions?.let { list ->
                 if (list.isNotEmpty()) {
                     visibility = View.VISIBLE
                     for (suggestionText in list) {
-                        // context를 가져올 때도 this.context 또는 context 사용
+                        if (suggestionText == null) continue
+
                         val chip = TextView(context).apply {
                             text = suggestionText
                             textSize = 14f
@@ -76,11 +80,13 @@ class ChatAdapter(
                             layoutParams = LinearLayout.LayoutParams(
                                 ViewGroup.LayoutParams.WRAP_CONTENT,
                                 ViewGroup.LayoutParams.WRAP_CONTENT
-                            ).apply { setMargins(0, 0, 15, 15) }
+                            ).apply {
+                                setMargins(0, 0, 15, 15) // 칩 간의 간격
+                            }
 
                             setOnClickListener { listener.onSuggestionClick(suggestionText) }
                         }
-                        addView(chip) // addView 바로 호출
+                        addView(chip)
                     }
                 } else {
                     visibility = View.GONE

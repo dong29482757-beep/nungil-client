@@ -9,10 +9,9 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28" />
-
-    <!-- 일정 알람 관련 권한 -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" /> <!-- 일정 알람 관련 권한 -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -29,28 +28,30 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication"
         android:usesCleartextTraffic="true">
-
         <activity
-            android:name=".guardian.onboarding.SplashActivity"
+            android:name=".UserOrGuardianActivity"
+            android:exported="false" />
+        <activity
+            android:name=".SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity android:name=".guardian.main.GuardianMainActivity" />
-        <activity android:name=".guardian.onboarding.WelcomeActivity"/>
+        <activity android:name=".guardian.onboarding.WelcomeActivity" />
         <activity android:name=".guardian.onboarding.LoginActivity" />
-        <activity android:name=".guardian.onboarding.GuardianChatActivity"/>
-        <activity android:name=".guardian.onboarding.SpecialNotesActivity"/>
-        <activity android:name=".guardian.onboarding.SetupCompleteActivity"/>
-        <activity android:name=".guardian.schedule.ui.ScheduleAddActivity"/>
-
-        <!-- 일정 알람 수신 BroadcastReceiver -->
+        <activity android:name=".guardian.onboarding.GuardianChatActivity" />
+        <activity android:name=".guardian.onboarding.SpecialNotesActivity" />
+        <activity android:name=".guardian.onboarding.SetupCompleteActivity" />
+        <activity android:name=".guardian.schedule.ui.ScheduleAddActivity" /> <!-- 일정 알람 수신 BroadcastReceiver -->
+        <activity android:name=".user.UserStartActivity"/>
+        <activity android:name=".user.qr.UserQrActivity"/>
         <receiver
-            android:name=".user.main.schedule.service.ScheduleAlarmReceiver"
+            android:name=".user.schedule.service.ScheduleAlarmReceiver"
             android:exported="false" />
-
     </application>
 
 </manifest>

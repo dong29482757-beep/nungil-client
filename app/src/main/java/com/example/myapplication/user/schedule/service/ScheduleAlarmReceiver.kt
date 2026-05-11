@@ -1,4 +1,4 @@
-package com.example.myapplication.user.main.schedule.service
+package com.example.myapplication.user.schedule.service
 
 import android.content.BroadcastReceiver
 import android.content.Context

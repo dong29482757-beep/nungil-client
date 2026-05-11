@@ -1,6 +1,5 @@
-package com.example.myapplication.user.main.schedule.service
+package com.example.myapplication.user.schedule.service
 
-import android.R
 import android.app.AlarmManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -9,8 +8,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import com.example.myapplication.user.main.schedule.data.ScheduleRepository
-import com.example.myapplication.user.main.ui.UserChatActivity
+import com.example.myapplication.user.chat.UserChatActivity
+import com.example.myapplication.user.schedule.data.ScheduleRepository
 
 class ScheduleManager(private val context: Context) {
 
@@ -32,9 +31,8 @@ class ScheduleManager(private val context: Context) {
     }
 
     /**
-     * DB에서 오늘 일정을 백그라운드로 가져와 AlarmManager에 등록.
-     * @param userId  USER.id
-     * @param userIdx USER.idx
+     * DB에서 오늘 일정을 가져와 알람을 등록한다.
+     * DB 연동 완료 후 ScheduleRepository.fetchTodaySchedules() 결과를 사용.
      */
     fun syncSchedulesFromDB(userId: String, userIdx: Int) {
         Thread {
@@ -83,8 +81,8 @@ class ScheduleManager(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_dialog_info)
+        val notification = androidx.core.app.NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("📅 일정 시간이 됐어요!")
             .setContentText(title)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
