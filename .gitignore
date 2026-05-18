@@ -21,3 +21,5 @@ local.properties
 
 # OS 관련 임시 파일
 Thumbs.db
+
+app/google-services.json
