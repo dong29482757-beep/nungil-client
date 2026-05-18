@@ -16,7 +16,6 @@
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="true"
@@ -64,6 +63,11 @@
         <!-- 일정 알람 수신 BroadcastReceiver -->
         <receiver
             android:name=".user.schedule.service.ScheduleAlarmReceiver"
+            android:exported="false" />
+
+        <!-- 재부팅 후 알람 재등록 -->
+        <receiver
+            android:name=".user.schedule.service.BootReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

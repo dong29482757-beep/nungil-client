@@ -24,4 +24,9 @@ local.properties
 # OS 관련 임시 파일
 Thumbs.db
 
+# Firebase 설정 (키 노출 방지)
 app/google-services.json
+google-services.json
+
+# Claude 내부 폴더
+.claude/
